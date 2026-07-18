@@ -561,32 +561,32 @@ export default function Quiz() {
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-3 shrink-0 pt-4 pb-6 sm:pb-0 mt-4 sm:mt-auto sticky -bottom-6 sm:static z-10 bg-[var(--md-surface-container)] sm:bg-transparent border-t border-[var(--md-outline-variant)]/20 sm:border-0 -mx-6 px-6 sm:mx-0 sm:px-0 rounded-b-[var(--md-shape-xl)] sm:rounded-none">
+            <div className="flex w-full justify-between sm:justify-start gap-1.5 sm:gap-3 shrink-0 pt-4 pb-6 sm:pb-0 mt-4 sm:mt-auto sticky -bottom-6 sm:static z-10 bg-[var(--md-surface-container)] sm:bg-transparent border-t border-[var(--md-outline-variant)]/20 sm:border-0 -mx-6 px-6 sm:mx-0 sm:px-0 rounded-b-[var(--md-shape-xl)] sm:rounded-none">
                   <button
                     onClick={nextRecommendation}
-                    className="relative overflow-hidden font-display uppercase tracking-wide text-sm px-6 py-3 rounded-full"
+                    className="relative flex-1 sm:flex-none overflow-hidden font-display uppercase tracking-wider text-[10px] sm:text-sm px-2 sm:px-6 py-2.5 sm:py-3 rounded-full whitespace-nowrap"
                     style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
                   >
                     <md-ripple></md-ripple>
-                    Get another
+                    Next
                   </button>
                   {current.trailerKey && (
                     <button
                       onClick={() => setShowTrailer(true)}
-                      className="relative overflow-hidden font-display uppercase tracking-wide text-sm px-6 py-3 rounded-full"
+                      className="relative flex-1 sm:flex-none overflow-hidden font-display uppercase tracking-wider text-[10px] sm:text-sm px-2 sm:px-6 py-2.5 sm:py-3 rounded-full whitespace-nowrap"
                       style={{ background: "var(--md-secondary)", color: "var(--md-on-secondary)" }}
                     >
                       <md-ripple></md-ripple>
-                      Watch Trailer
+                      Trailer
                     </button>
                   )}
                   <button
                     onClick={restart}
-                    className="relative overflow-hidden text-sm font-medium px-6 py-3 rounded-full border"
+                    className="relative flex-1 sm:flex-none overflow-hidden font-display uppercase tracking-wider text-[10px] sm:text-sm px-2 sm:px-6 py-2.5 sm:py-3 rounded-full border whitespace-nowrap"
                     style={{ borderColor: "var(--md-outline-variant)", color: "var(--md-on-surface)" }}
                   >
                     <md-ripple></md-ripple>
-                    Retake quiz
+                    Retake
                   </button>
                 </div>
               </div>
