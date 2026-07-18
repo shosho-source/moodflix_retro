@@ -108,6 +108,7 @@ export default function Quiz() {
   const [showTrailer, setShowTrailer] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [resultIndex, setResultIndex] = useState(0);
+  const [expandedSynopsis, setExpandedSynopsis] = useState(false);
   const [allGenres, setAllGenres] = useState(false);
   const [sessionSeed] = useState(() => Date.now());
 
@@ -170,6 +171,7 @@ export default function Quiz() {
     } else {
       const finalResults = recommend(answers, [], moviePool, sessionSeed);
       setResultIndex(0);
+      setExpandedSynopsis(false);
       setStage(finalResults.length > 0 ? "result" : "empty");
     }
   }
@@ -200,17 +202,16 @@ export default function Quiz() {
     setAnswers(emptyAnswers);
     setStepIndex(0);
     setResultIndex(0);
-    setShowTrailer(false);
+    setExpandedSynopsis(false);
     setStage("intro");
   }
 
   function nextRecommendation() {
     setShowTrailer(false);
-    // Simply advance to the next movie in the scored results
-    if (resultIndex < results.length - 1) {
+    setExpandedSynopsis(false);
+    if (resultIndex < totalMatches - 1) {
       setResultIndex(resultIndex + 1);
     } else {
-      // Wrap around to the first result
       setResultIndex(0);
     }
   }
@@ -448,8 +449,8 @@ export default function Quiz() {
               <div className="absolute inset-0 bg-black/80 backdrop-blur-[8px]" />
             </motion.div>
           )}
-          <div className="animate-in slide-in-from-bottom-8 fade-in duration-700">
-            <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col h-[85vh] sm:h-auto animate-in slide-in-from-bottom-8 fade-in duration-700">
+            <div className="flex items-center justify-between mb-4 shrink-0">
               <p
                 className="font-display text-xs uppercase tracking-[0.3em]"
                 style={{ color: "var(--md-primary)" }}
@@ -466,8 +467,9 @@ export default function Quiz() {
                 </span>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-6">
-              <div className="sm:w-48">
+            
+            <div className="flex-1 overflow-y-auto no-scrollbar pb-6 flex flex-col sm:flex-row gap-6">
+              <div className="w-32 mx-auto sm:w-48 sm:mx-0 shrink-0">
                 <PosterCard movie={current} />
               </div>
               <div className="flex-1 flex flex-col">
@@ -506,9 +508,18 @@ export default function Quiz() {
                     </span>
                   )}
                 </p>
-                <p className="mt-3 leading-relaxed" style={{ color: "var(--md-on-surface)" }}>
-                  {current.blurb}
-                </p>
+                <div className="mt-3 leading-relaxed" style={{ color: "var(--md-on-surface)" }}>
+                  <p className={!expandedSynopsis ? "line-clamp-2 sm:line-clamp-none text-sm sm:text-base" : "text-sm sm:text-base"}>
+                    {current.blurb}
+                  </p>
+                  <button 
+                    className="text-xs font-medium uppercase tracking-wider sm:hidden mt-2" 
+                    style={{ color: "var(--md-primary)" }}
+                    onClick={() => setExpandedSynopsis(!expandedSynopsis)}
+                  >
+                    {expandedSynopsis ? "Show less" : "Read more"}
+                  </button>
+                </div>
 
                 {current.providers && current.providers.length > 0 && (
                   <div className="mt-5">
@@ -530,8 +541,10 @@ export default function Quiz() {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
 
-                <div className="flex flex-wrap gap-3 mt-auto pt-8">
+            <div className="flex flex-wrap gap-2 sm:gap-3 shrink-0 pt-4 border-t sm:border-t-0 border-[var(--md-outline-variant)]/30 sm:mt-8 mt-auto bg-[var(--md-surface)] sm:bg-transparent pb-4 sm:pb-0">
                   <button
                     onClick={nextRecommendation}
                     className="relative overflow-hidden font-display uppercase tracking-wide text-sm px-6 py-3 rounded-full"
@@ -560,10 +573,8 @@ export default function Quiz() {
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        </>
-      )}
+            </>
+          )}
 
       {stage === "empty" && (
         <div className="text-center py-20">
