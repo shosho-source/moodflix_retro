@@ -670,11 +670,19 @@ export default function Quiz() {
             <motion.div 
               animate={{ scale: [1, 1.05, 1], opacity: [0.5, 1, 0.5] }}
               transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-              className="mb-12 relative w-32 h-32"
+              className="mb-12 relative w-32 h-32 shrink-0 aspect-square"
             >
-              <div className="absolute inset-0 rounded-full border-4 border-[var(--md-primary)] opacity-20" />
-              <div className="absolute inset-2 rounded-full border-4 border-[var(--md-primary)] border-t-transparent animate-spin duration-1000" />
-              <div className="absolute inset-6 rounded-full border-4 border-[var(--md-secondary)] border-b-transparent animate-spin" style={{ animationDirection: 'reverse', animationDuration: '2s' }} />
+              <div className="absolute inset-0 rounded-full border-[3px] border-[var(--md-primary)] opacity-20" />
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                className="absolute inset-2 rounded-full border-[3px] border-[var(--md-primary)] border-t-transparent" 
+              />
+              <motion.div 
+                animate={{ rotate: -360 }}
+                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                className="absolute inset-6 rounded-full border-[3px] border-[var(--md-secondary)] border-b-transparent" 
+              />
             </motion.div>
             
             <motion.h1 
