@@ -109,6 +109,7 @@ function MatchBadge({ score, max }: { score: number; max: number }) {
         ? "hsl(45, 80%, 55%)"
         : "hsl(0, 60%, 55%)";
 
+  return (
     <span
       className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap"
       style={{ background: "var(--md-primary-container)", color: "var(--md-on-primary-container)" }}
