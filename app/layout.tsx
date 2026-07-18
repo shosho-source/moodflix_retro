@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import "material-symbols/outlined.css";
 import "./globals.css";
+import MaterialRegistry from "@/components/MaterialRegistry";
 
 export const metadata: Metadata = {
   title: "MoodFlix — A movie, picked for you",
@@ -14,7 +16,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <MaterialRegistry />
+        {children}
+      </body>
     </html>
   );
 }

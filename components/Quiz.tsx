@@ -250,13 +250,12 @@ export default function Quiz() {
             Answer a few quick questions about your mood and the occasion. We&apos;ll hand you
             one recommendation at a time — no lists, no registration.
           </p>
-          <button
+          <md-filled-button
             onClick={() => setStage("quiz")}
-            className="state-layer font-display uppercase tracking-wide text-sm px-8 py-3.5 rounded-full"
-            style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
+            style={{ '--md-filled-button-container-shape': '9999px' } as React.CSSProperties}
           >
             Start now
-          </button>
+          </md-filled-button>
         </div>
       )}
 
@@ -391,34 +390,23 @@ export default function Quiz() {
           </AnimatePresence>
 
           <div className="flex items-center justify-between mt-8">
-            <button
-              onClick={back}
-              className="state-layer text-sm font-medium px-5 py-2.5 rounded-full"
-              style={{ color: "var(--md-on-surface-variant)" }}
-            >
+            <md-text-button onClick={back}>
               Back
-            </button>
-            <button
+            </md-text-button>
+            <md-filled-button
               onClick={next}
               disabled={!canAdvance}
-              className="state-layer font-display uppercase tracking-wide text-sm px-7 py-3 rounded-full disabled:opacity-40 disabled:pointer-events-none"
-              style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
             >
               {stepIndex === steps.length - 1 ? "Check results" : "Next"}
-            </button>
+            </md-filled-button>
           </div>
         </div>
       )}
 
       {stage === "calculating" && (
         <div className="flex flex-col items-center justify-center py-20 gap-6 text-center animate-in fade-in zoom-in duration-500">
-          <div className="relative w-20 h-20">
-            <div className="absolute inset-0 rounded-full border-[4px] border-[var(--md-surface-variant)]" />
-            <div className="absolute inset-0 rounded-full border-[4px] border-[var(--md-primary)] border-t-transparent animate-spin" />
-            <div 
-              className="absolute inset-2 rounded-full border-[4px] border-[var(--md-primary)] border-b-transparent animate-spin" 
-              style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} 
-            />
+          <div className="w-full max-w-xs">
+            <md-linear-progress indeterminate></md-linear-progress>
           </div>
           <div>
             <h2 className="font-display text-2xl mb-2" style={{ color: "var(--md-on-surface)" }}>
@@ -532,29 +520,20 @@ export default function Quiz() {
                 )}
 
                 <div className="flex flex-wrap gap-3 mt-auto pt-8">
-                  <button
-                    onClick={nextRecommendation}
-                    className="state-layer font-display uppercase tracking-wide text-sm px-6 py-3 rounded-full"
-                    style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
-                  >
+                  <md-filled-button onClick={nextRecommendation}>
                     Get another
-                  </button>
+                  </md-filled-button>
                   {current.trailerKey && (
-                    <button
+                    <md-filled-button
                       onClick={() => setShowTrailer(true)}
-                      className="state-layer font-display uppercase tracking-wide text-sm px-6 py-3 rounded-full"
-                      style={{ background: "var(--md-secondary)", color: "var(--md-on-secondary)" }}
+                      style={{ '--md-sys-color-primary': 'var(--md-sys-color-secondary)', '--md-sys-color-on-primary': 'var(--md-sys-color-on-secondary)' } as React.CSSProperties}
                     >
                       Watch Trailer
-                    </button>
+                    </md-filled-button>
                   )}
-                  <button
-                    onClick={restart}
-                    className="state-layer text-sm font-medium px-6 py-3 rounded-full border"
-                    style={{ borderColor: "var(--md-outline-variant)", color: "var(--md-on-surface)" }}
-                  >
+                  <md-text-button onClick={restart}>
                     Retake quiz
-                  </button>
+                  </md-text-button>
                 </div>
               </div>
             </div>
@@ -568,25 +547,20 @@ export default function Quiz() {
           <p className="text-[var(--md-on-surface-variant)] mb-8">
             Try broadening your answers or selecting different genres.
           </p>
-          <button
-            onClick={restart}
-            className="state-layer font-display uppercase tracking-wide text-sm px-7 py-3 rounded-full"
-            style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
-          >
+          <md-filled-button onClick={restart}>
             Retake quiz
-          </button>
+          </md-filled-button>
         </div>
       )}
 
       {showTrailer && current?.trailerKey && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="relative w-full max-w-5xl aspect-video bg-black rounded-[var(--md-shape-xl)] overflow-hidden shadow-2xl ring-1 ring-white/10">
-            <button
-              onClick={() => setShowTrailer(false)}
-              className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/40 hover:bg-black/80 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-colors"
-            >
-              ✕
-            </button>
+            <div className="absolute top-4 right-4 z-10 bg-black/40 hover:bg-black/80 rounded-full backdrop-blur-md transition-colors text-white">
+              <md-icon-button onClick={() => setShowTrailer(false)}>
+                <md-icon>close</md-icon>
+              </md-icon-button>
+            </div>
             <iframe
               src={`https://www.youtube.com/embed/${current.trailerKey}?autoplay=1`}
               title="Trailer"

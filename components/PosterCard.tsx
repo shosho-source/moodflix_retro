@@ -14,6 +14,7 @@ export default function PosterCard({ movie }: { movie: Movie }) {
           : `linear-gradient(160deg, hsl(${hue} 45% 22%) 0%, hsl(${hue} 55% 10%) 60%, hsl(${(hue + 30) % 360} 40% 8%) 100%)`,
       }}
     >
+      <md-elevation></md-elevation>
       {hasPoster ? (
         <Image
           src={movie.posterPath!}
