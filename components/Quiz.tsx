@@ -10,6 +10,27 @@ import OptionCard from "./OptionCard";
 import Sprocket from "./Sprocket";
 import PosterCard from "./PosterCard";
 
+const genreIcons: Record<string, string> = {
+  Action: "sports_martial_arts",
+  Adventure: "explore",
+  Animation: "animation",
+  Comedy: "sentiment_satisfied",
+  Crime: "local_police",
+  Documentary: "movie",
+  Drama: "theater_comedy",
+  Family: "family_restroom",
+  Fantasy: "auto_awesome",
+  History: "history_edu",
+  Horror: "sentiment_very_dissatisfied",
+  Music: "music_note",
+  Mystery: "search",
+  Romance: "favorite",
+  "Science Fiction": "rocket_launch",
+  Thriller: "warning",
+  War: "military_tech",
+  Western: "explore"
+};
+
 type Stage = "intro" | "quiz" | "result" | "empty" | "loading" | "calculating" | "splash";
 
 const moodOptions = [
@@ -67,7 +88,7 @@ function Step({
 }) {
   return (
     <div>
-      <h2 className="font-display text-2xl sm:text-3xl text-white mb-1.5">{title}</h2>
+      <h2 className="font-display text-2xl sm:text-3xl mb-1.5" style={{ color: "var(--md-on-surface)" }}>{title}</h2>
       {hint && (
         <p className="text-sm mb-5" style={{ color: "var(--md-on-surface-variant)" }}>
           {hint}
@@ -88,15 +109,11 @@ function MatchBadge({ score, max }: { score: number; max: number }) {
         ? "hsl(45, 80%, 55%)"
         : "hsl(0, 60%, 55%)";
 
-  return (
     <span
-      className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full"
-      style={{ background: `${color}20`, color, border: `1px solid ${color}40` }}
+      className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap"
+      style={{ background: "var(--md-primary-container)", color: "var(--md-on-primary-container)" }}
     >
-      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-        <circle cx="5" cy="5" r="4" stroke={color} strokeWidth="1.5" />
-        <circle cx="5" cy="5" r="2" fill={color} />
-      </svg>
+      <span className="material-symbols-outlined text-[14px]">check_circle</span>
       {pct}% match
     </span>
   );
@@ -239,7 +256,7 @@ export default function Quiz() {
     >
       {stage === "intro" && (
         <div className="text-center">
-          <h1 className="font-display text-4xl sm:text-5xl text-white mb-4 tracking-tight animate-in slide-in-from-bottom-8 fade-in duration-700 delay-150 fill-mode-both">
+          <h1 className="font-display text-4xl sm:text-5xl mb-4 tracking-tight animate-in slide-in-from-bottom-8 fade-in duration-700 delay-150 fill-mode-both" style={{ color: "var(--md-on-surface)" }}>
             What are we watching?
           </h1>
           <p className="text-lg max-w-md mx-auto mb-10 animate-in slide-in-from-bottom-8 fade-in duration-700 delay-300 fill-mode-both" style={{ color: "var(--md-on-surface-variant)" }}>
@@ -258,15 +275,15 @@ export default function Quiz() {
           <div className="mt-12 sm:mt-20 animate-in fade-in duration-1000 delay-700 fill-mode-both">
             <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center mb-8 sm:mb-10">
               <div className="rounded-[var(--md-shape-md)] py-5" style={{ background: "var(--md-surface-container-low)" }}>
-                <p className="font-display text-2xl text-white">{moviePool.length > 0 ? moviePool.length : "…"}</p>
+                <p className="font-display text-2xl" style={{ color: "var(--md-on-surface)" }}>{moviePool.length > 0 ? moviePool.length : "…"}</p>
                 <p className="text-[11px] uppercase tracking-[0.15em] mt-1" style={{ color: "var(--md-on-surface-variant)" }}>Movies</p>
               </div>
               <div className="rounded-[var(--md-shape-md)] py-5" style={{ background: "var(--md-surface-container-low)" }}>
-                <p className="font-display text-2xl text-white">{genreCount > 0 ? genreCount : "…"}</p>
+                <p className="font-display text-2xl" style={{ color: "var(--md-on-surface)" }}>{genreCount > 0 ? genreCount : "…"}</p>
                 <p className="text-[11px] uppercase tracking-[0.15em] mt-1" style={{ color: "var(--md-on-surface-variant)" }}>Genres</p>
               </div>
               <div className="rounded-[var(--md-shape-md)] py-5" style={{ background: "var(--md-surface-container-low)" }}>
-                <p className="font-display text-2xl text-white">TMDB</p>
+                <p className="font-display text-2xl" style={{ color: "var(--md-on-surface)" }}>TMDB</p>
                 <p className="text-[11px] uppercase tracking-[0.15em] mt-1" style={{ color: "var(--md-on-surface-variant)" }}>Powered by</p>
               </div>
             </div>
@@ -465,17 +482,17 @@ export default function Quiz() {
             </motion.div>
           )}
           <div className="flex flex-col animate-in slide-in-from-bottom-8 fade-in duration-700">
-            <div className="flex items-center justify-between mb-4 shrink-0">
-              <p
-                className="font-display text-xs uppercase tracking-[0.3em]"
-                style={{ color: "var(--md-primary)" }}
-              >
-                Tonight&apos;s pick
-              </p>
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between mb-4 sm:mb-6 shrink-0 w-full">
+              <div className="flex items-center gap-2 font-display text-xs sm:text-sm uppercase tracking-wider font-bold" style={{ color: "var(--md-primary)" }}>
+                <div className="flex items-center justify-center w-6 h-6 rounded-full" style={{ background: "var(--md-primary-container)" }}>
+                  <span className="material-symbols-outlined text-[14px]">sparkle</span>
+                </div>
+                <span>Tonight&apos;s pick</span>
+              </div>
+              <div className="flex items-center gap-3 sm:gap-4">
                 <MatchBadge score={currentScore} max={currentMaxScore} />
                 <span
-                  className="text-xs"
+                  className="text-xs sm:text-sm whitespace-nowrap"
                   style={{ color: "var(--md-on-surface-variant)" }}
                 >
                   {resultIndex + 1} of {totalMatches}
@@ -483,59 +500,68 @@ export default function Quiz() {
               </div>
             </div>
             
-            <div className="flex-1 pb-4 sm:pb-6 flex flex-col sm:flex-row gap-4 sm:gap-8">
-              <div className="w-40 mx-auto sm:w-64 sm:mx-0 shrink-0 drop-shadow-2xl">
+            <div className="flex-1 pb-4 sm:pb-6 flex flex-col items-center sm:flex-row gap-4 sm:gap-8 w-full">
+              <div className="w-56 mx-auto sm:w-64 sm:mx-0 shrink-0 drop-shadow-lg">
                 <PosterCard movie={current} />
               </div>
-              <div className="flex-1 flex flex-col items-center text-center sm:items-start sm:text-left">
+              <div className="flex-1 flex flex-col items-center text-center sm:items-start sm:text-left w-full mt-2 sm:mt-0">
                 <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-4">
                   {current.genres.map((g) => (
                     <span
                       key={g}
-                      className="text-xs px-3 py-1 rounded-full"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
                       style={{
-                        background: "var(--md-tertiary-container)",
-                        color: "var(--md-on-tertiary-container)",
+                        background: "var(--md-primary-container)",
+                        color: "var(--md-on-primary-container)",
                       }}
                     >
+                      <span className="material-symbols-outlined text-[14px]">{genreIcons[g] || "movie"}</span>
                       {g}
                     </span>
                   ))}
                   <span
-                    className="text-xs px-3 py-1 rounded-full"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
                     style={{
-                      background: "var(--md-surface-container-highest)",
-                      color: "var(--md-on-surface-variant)",
+                      background: "var(--md-primary-container)",
+                      color: "var(--md-on-primary-container)",
                     }}
                   >
+                    <span className="material-symbols-outlined text-[14px]">radio_button_checked</span>
                     {current.rating}
                   </span>
                 </div>
-                <h2 className="font-display text-2xl sm:text-3xl mb-1 sm:mb-2" style={{ color: "var(--md-on-surface)" }}>
+                <h2 className="font-display text-2xl sm:text-3xl mb-1 sm:mb-2 font-bold" style={{ color: "var(--md-on-surface)" }}>
                   {current.title}{" "}
-                  <span className="text-lg sm:text-xl opacity-60">({current.year})</span>
+                  <span className="text-lg sm:text-xl font-normal" style={{ color: "var(--md-outline)" }}>({current.year})</span>
                 </h2>
-                <p className="text-xs sm:text-sm mb-1" style={{ color: "var(--md-on-surface-variant)" }}>
-                  {current.runtime} min
-                  <span className="ml-3 font-medium text-[var(--md-primary)]">
+                <p className="flex items-center justify-center sm:justify-start gap-3 text-xs sm:text-sm mb-1 font-medium" style={{ color: "var(--md-on-surface-variant)" }}>
+                  <span className="flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[16px]">schedule</span>
+                    {current.runtime} min
+                  </span>
+                  <span className="w-1 h-1 rounded-full" style={{ background: "var(--md-outline)" }}></span>
+                  <span className="flex items-center gap-1" style={{ color: "var(--md-primary)" }}>
+                    <span className="material-symbols-outlined text-[16px]">star</span>
                     IMDb {current.voteAverage != null && current.voteAverage > 0 ? current.voteAverage.toFixed(1) : "N/A"}
                   </span>
                 </p>
-                <div className="mt-2 sm:mt-4 leading-relaxed text-left w-full" style={{ color: "var(--md-on-surface)" }}>
-                  <p className={!expandedSynopsis ? "line-clamp-1 sm:line-clamp-none text-sm sm:text-base" : "text-sm sm:text-base"}>
+                <div className="mt-2 sm:mt-4 leading-relaxed text-left w-full sm:text-left text-center" style={{ color: "var(--md-on-surface)" }}>
+                  <p className={!expandedSynopsis ? "line-clamp-1 sm:line-clamp-none text-sm sm:text-base font-medium" : "text-sm sm:text-base font-medium"}>
                     {current.blurb}
                   </p>
                   <button 
-                    className="text-xs font-bold uppercase tracking-wider sm:hidden mt-2" 
+                    className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider sm:hidden mt-2" 
                     style={{ color: "var(--md-primary)" }}
                     onClick={() => setExpandedSynopsis(!expandedSynopsis)}
                   >
                     {expandedSynopsis ? "Show less" : "Read more"}
+                    <span className="material-symbols-outlined text-[14px]">{expandedSynopsis ? "expand_less" : "chevron_right"}</span>
                   </button>
                 </div>
 
-                <div className="mt-5">
-                  <p className="text-xs font-display uppercase tracking-[0.2em] mb-2" style={{ color: "var(--md-on-surface-variant)" }}>
+                <div className="mt-5 w-full bg-[var(--md-primary-container)] p-4 rounded-[16px] text-left">
+                  <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.1em] mb-3" style={{ color: "var(--md-on-primary-container)" }}>
+                    <span className="material-symbols-outlined text-[14px]">live_tv</span>
                     Where to watch
                   </p>
                   {current.providers && current.providers.length > 0 ? (
@@ -548,12 +574,12 @@ export default function Quiz() {
                           title={p.provider_name}
                           width={32}
                           height={32}
-                          className="w-8 h-8 rounded shadow-sm" 
+                          className="w-8 h-8 rounded-lg shadow-sm bg-white" 
                         />
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs opacity-70" style={{ color: "var(--md-on-surface)" }}>
+                    <p className="text-xs font-medium" style={{ color: "var(--md-on-primary-container)" }}>
                       Not currently streaming in your region.
                     </p>
                   )}
@@ -561,32 +587,35 @@ export default function Quiz() {
               </div>
             </div>
 
-            <div className="flex w-full justify-between sm:justify-start gap-1.5 sm:gap-3 shrink-0 pt-4 pb-6 sm:pb-0 mt-4 sm:mt-auto sticky -bottom-6 sm:static z-10 bg-[var(--md-surface-container)] sm:bg-transparent border-t border-[var(--md-outline-variant)]/20 sm:border-0 -mx-6 px-6 sm:mx-0 sm:px-0 rounded-b-[var(--md-shape-xl)] sm:rounded-none">
+            <div className="flex w-full justify-between sm:justify-start gap-2 sm:gap-3 shrink-0 pt-4 pb-6 sm:pb-0 mt-4 sm:mt-auto sticky -bottom-6 sm:static z-10 bg-[var(--md-surface-container)] sm:bg-transparent -mx-6 px-6 sm:mx-0 sm:px-0 rounded-b-[var(--md-shape-xl)] sm:rounded-none">
                   <button
                     onClick={nextRecommendation}
-                    className="relative flex-1 sm:flex-none overflow-hidden font-display uppercase tracking-wider text-[10px] sm:text-sm px-2 sm:px-6 py-2.5 sm:py-3 rounded-full whitespace-nowrap"
+                    className="relative flex items-center justify-center gap-1.5 flex-1 sm:flex-none overflow-hidden font-display uppercase font-bold tracking-wider text-[11px] sm:text-sm px-2 sm:px-6 py-3 rounded-full whitespace-nowrap"
                     style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
                   >
                     <md-ripple></md-ripple>
+                    <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                     Next
                   </button>
                   {current.trailerKey && (
                     <button
                       onClick={() => setShowTrailer(true)}
-                      className="relative flex-1 sm:flex-none overflow-hidden font-display uppercase tracking-wider text-[10px] sm:text-sm px-2 sm:px-6 py-2.5 sm:py-3 rounded-full whitespace-nowrap"
-                      style={{ background: "var(--md-secondary)", color: "var(--md-on-secondary)" }}
+                      className="relative flex items-center justify-center gap-1.5 flex-1 sm:flex-none overflow-hidden font-display uppercase font-bold tracking-wider text-[11px] sm:text-sm px-2 sm:px-6 py-3 rounded-full whitespace-nowrap"
+                      style={{ background: "var(--md-primary-container)", color: "var(--md-on-primary-container)" }}
                     >
                       <md-ripple></md-ripple>
+                      <span className="material-symbols-outlined text-[16px] filled">play_arrow</span>
                       Trailer
                     </button>
                   )}
                   <button
                     onClick={restart}
-                    className="relative flex-1 sm:flex-none overflow-hidden font-display uppercase tracking-wider text-[10px] sm:text-sm px-2 sm:px-6 py-2.5 sm:py-3 rounded-full border whitespace-nowrap"
-                    style={{ borderColor: "var(--md-outline-variant)", color: "var(--md-on-surface)" }}
+                    className="relative flex items-center justify-center gap-1.5 flex-1 sm:flex-none overflow-hidden font-display uppercase font-bold tracking-wider text-[11px] sm:text-sm px-2 sm:px-6 py-3 rounded-full border border-[var(--md-primary)] whitespace-nowrap"
+                    style={{ color: "var(--md-primary)", background: "transparent" }}
                   >
                     <md-ripple></md-ripple>
-                    Retake
+                    <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+                    Retake Quiz
                   </button>
                 </div>
               </div>
@@ -595,8 +624,8 @@ export default function Quiz() {
 
       {stage === "empty" && (
         <div className="text-center py-20">
-          <h2 className="font-display text-3xl mb-4 text-white">No exact matches</h2>
-          <p className="text-[var(--md-on-surface-variant)] mb-8">
+          <h2 className="font-display text-3xl mb-4" style={{ color: "var(--md-on-surface)" }}>No exact matches</h2>
+          <p className="mb-8" style={{ color: "var(--md-on-surface-variant)" }}>
             Try broadening your answers or selecting different genres.
           </p>
           <button

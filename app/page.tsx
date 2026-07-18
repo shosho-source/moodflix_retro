@@ -14,7 +14,7 @@ export default function Home() {
       >
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <span className="font-display text-lg tracking-wide text-white">MoodFlix</span>
+            <span className="font-display text-lg tracking-wide text-[var(--md-on-surface)]">MoodFlix</span>
           </div>
           <p
             className="text-xs hidden sm:block uppercase tracking-[0.15em]"
