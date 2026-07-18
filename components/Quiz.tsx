@@ -501,12 +501,12 @@ export default function Quiz() {
               </div>
             </div>
             
-            <div className="flex-1 pb-4 sm:pb-6 flex flex-col items-center sm:flex-row gap-4 sm:gap-8 w-full">
-              <div className="w-56 mx-auto sm:w-64 sm:mx-0 shrink-0 drop-shadow-lg">
+            <div className="flex-1 pb-4 sm:pb-6 flex flex-col items-center gap-4 sm:gap-6 w-full">
+              <div className="w-56 sm:w-64 mx-auto shrink-0 drop-shadow-lg">
                 <PosterCard movie={current} />
               </div>
-              <div className="flex-1 flex flex-col items-center text-center sm:items-start sm:text-left w-full mt-2 sm:mt-0">
-                <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-4">
+              <div className="flex-1 flex flex-col items-center text-center w-full mt-2">
+                <div className="flex flex-wrap justify-center gap-2 mb-4">
                   {current.genres.map((g) => (
                     <span
                       key={g}
@@ -535,7 +535,7 @@ export default function Quiz() {
                   {current.title}{" "}
                   <span className="text-lg sm:text-xl font-normal" style={{ color: "var(--md-outline)" }}>({current.year})</span>
                 </h2>
-                <p className="flex items-center justify-center sm:justify-start gap-3 text-xs sm:text-sm mb-1 font-medium" style={{ color: "var(--md-on-surface-variant)" }}>
+                <p className="flex items-center justify-center gap-3 text-xs sm:text-sm mb-1 font-medium" style={{ color: "var(--md-on-surface-variant)" }}>
                   <span className="flex items-center gap-1">
                     <span className="material-symbols-outlined text-[16px]">schedule</span>
                     {current.runtime} min
@@ -546,7 +546,7 @@ export default function Quiz() {
                     IMDb {current.voteAverage != null && current.voteAverage > 0 ? current.voteAverage.toFixed(1) : "N/A"}
                   </span>
                 </p>
-                <div className="mt-2 sm:mt-4 leading-relaxed text-left w-full sm:text-left text-center" style={{ color: "var(--md-on-surface)" }}>
+                <div className="mt-2 sm:mt-4 leading-relaxed text-center w-full" style={{ color: "var(--md-on-surface)" }}>
                   <p className={!expandedSynopsis ? "line-clamp-1 sm:line-clamp-none text-sm sm:text-base font-medium" : "text-sm sm:text-base font-medium"}>
                     {current.blurb}
                   </p>
@@ -588,35 +588,35 @@ export default function Quiz() {
               </div>
             </div>
 
-            <div className="flex w-full justify-between sm:justify-start gap-1 sm:gap-3 shrink-0 pt-4 pb-6 sm:pb-0 mt-4 sm:mt-auto sticky -bottom-6 sm:static z-10 bg-[var(--md-surface-container)] sm:bg-transparent -mx-6 px-6 sm:mx-0 sm:px-0 rounded-b-[var(--md-shape-xl)] sm:rounded-none">
-                  <button
-                    onClick={nextRecommendation}
-                    className="relative flex items-center justify-center gap-1 sm:gap-1.5 flex-1 sm:flex-none overflow-hidden font-display uppercase font-bold tracking-wide text-[9px] sm:text-sm px-1 sm:px-6 py-3 rounded-full whitespace-nowrap"
-                    style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
-                  >
-                    <md-ripple></md-ripple>
-                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">arrow_forward</span>
-                    Next
-                  </button>
+            <div className="grid grid-cols-2 gap-2 shrink-0 pt-4 pb-6 sm:pb-0 mt-4 sm:mt-auto sticky -bottom-6 sm:static z-10 bg-[var(--md-surface-container)] sm:bg-transparent -mx-6 px-6 sm:mx-0 sm:px-0 rounded-b-[var(--md-shape-xl)] sm:rounded-none">
                   {current.trailerKey && (
                     <button
                       onClick={() => setShowTrailer(true)}
-                      className="relative flex items-center justify-center gap-1 sm:gap-1.5 flex-1 sm:flex-none overflow-hidden font-display uppercase font-bold tracking-wide text-[9px] sm:text-sm px-1 sm:px-6 py-3 rounded-full whitespace-nowrap"
+                      className="relative flex items-center justify-center gap-1.5 overflow-hidden font-display uppercase font-bold tracking-wide text-xs sm:text-sm py-3.5 rounded-full"
                       style={{ background: "var(--md-primary-container)", color: "var(--md-on-primary-container)" }}
                     >
                       <md-ripple></md-ripple>
-                      <span className="material-symbols-outlined text-[14px] sm:text-[16px] filled">play_arrow</span>
+                      <span className="material-symbols-outlined text-[16px] filled">play_arrow</span>
                       Trailer
                     </button>
                   )}
                   <button
                     onClick={restart}
-                    className="relative flex items-center justify-center gap-1 sm:gap-1.5 flex-1 sm:flex-none overflow-hidden font-display uppercase font-bold tracking-wide text-[9px] sm:text-sm px-1 sm:px-6 py-3 rounded-full border border-[var(--md-primary)] whitespace-nowrap"
+                    className={`relative flex items-center justify-center gap-1.5 overflow-hidden font-display uppercase font-bold tracking-wide text-xs sm:text-sm py-3.5 rounded-full border border-[var(--md-primary)] ${!current.trailerKey ? 'col-span-2' : ''}`}
                     style={{ color: "var(--md-primary)", background: "transparent" }}
                   >
                     <md-ripple></md-ripple>
-                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">restart_alt</span>
+                    <span className="material-symbols-outlined text-[16px]">restart_alt</span>
                     Retake Quiz
+                  </button>
+                  <button
+                    onClick={nextRecommendation}
+                    className="col-span-2 relative flex items-center justify-center gap-1.5 overflow-hidden font-display uppercase font-bold tracking-wide text-sm sm:text-base py-4 rounded-full"
+                    style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
+                  >
+                    <md-ripple></md-ripple>
+                    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    Next Suggestion
                   </button>
                 </div>
               </div>
