@@ -491,8 +491,8 @@ export default function Quiz() {
               </div>
             </div>
             
-            <div className="flex-1 pb-6 flex flex-col sm:flex-row gap-6 sm:gap-8">
-              <div className="w-56 mx-auto sm:w-64 sm:mx-0 shrink-0 drop-shadow-2xl">
+            <div className="flex-1 pb-4 sm:pb-6 flex flex-col sm:flex-row gap-4 sm:gap-8">
+              <div className="w-40 mx-auto sm:w-64 sm:mx-0 shrink-0 drop-shadow-2xl">
                 <PosterCard movie={current} />
               </div>
               <div className="flex-1 flex flex-col items-center text-center sm:items-start sm:text-left">
@@ -519,11 +519,11 @@ export default function Quiz() {
                     {current.rating}
                   </span>
                 </div>
-                <h2 className="font-display text-3xl mb-2" style={{ color: "var(--md-on-surface)" }}>
+                <h2 className="font-display text-2xl sm:text-3xl mb-1 sm:mb-2" style={{ color: "var(--md-on-surface)" }}>
                   {current.title}{" "}
-                  <span className="text-xl opacity-60">({current.year})</span>
+                  <span className="text-lg sm:text-xl opacity-60">({current.year})</span>
                 </h2>
-                <p className="text-sm mb-1" style={{ color: "var(--md-on-surface-variant)" }}>
+                <p className="text-xs sm:text-sm mb-1" style={{ color: "var(--md-on-surface-variant)" }}>
                   {current.runtime} min
                   {current.voteAverage != null && (
                     <span className="ml-3">
@@ -531,8 +531,8 @@ export default function Quiz() {
                     </span>
                   )}
                 </p>
-                <div className="mt-4 leading-relaxed text-left w-full" style={{ color: "var(--md-on-surface)" }}>
-                  <p className={!expandedSynopsis ? "line-clamp-3 sm:line-clamp-none text-sm sm:text-base" : "text-sm sm:text-base"}>
+                <div className="mt-2 sm:mt-4 leading-relaxed text-left w-full" style={{ color: "var(--md-on-surface)" }}>
+                  <p className={!expandedSynopsis ? "line-clamp-2 sm:line-clamp-none text-sm sm:text-base" : "text-sm sm:text-base"}>
                     {current.blurb}
                   </p>
                   <button 
@@ -567,7 +567,7 @@ export default function Quiz() {
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-center sm:justify-start gap-3 shrink-0 pt-6 mt-4 sm:mt-auto">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-3 shrink-0 pt-4 mt-2 sm:mt-auto">
                   <button
                     onClick={nextRecommendation}
                     className="relative overflow-hidden font-display uppercase tracking-wide text-sm px-6 py-3 rounded-full"
