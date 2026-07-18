@@ -136,11 +136,9 @@ interface TMDBMovieDetail {
     results: Array<{ key: string; site: string; type: string }>;
   };
   "watch/providers"?: {
-    results: {
-      US?: {
-        flatrate?: Array<{ provider_id: number; provider_name: string; logo_path: string }>;
-      };
-    };
+    results: Record<string, {
+      flatrate?: Array<{ provider_id: number; provider_name: string; logo_path: string }>;
+    }>;
   };
 }
 
@@ -434,7 +432,20 @@ export async function fetchTMDBMovies(): Promise<Movie[]> {
     const keywords = detail?.keywords?.keywords ?? [];
     const runtime = detail?.runtime ?? 120; // fallback runtime
     const trailerKey = detail?.videos?.results?.find(v => v.site === "YouTube" && v.type === "Trailer")?.key;
-    const providers = detail?.["watch/providers"]?.results?.US?.flatrate;
+    
+    const rawProviders = detail?.["watch/providers"]?.results || {};
+    const targetRegions = ["US", "IN", "GB", "DE", "FR", "IT", "ES"]; // US, India, and major European regions
+    const providerMap = new Map<number, { provider_id: number; provider_name: string; logo_path: string }>();
+    
+    for (const region of targetRegions) {
+      const regionProviders = rawProviders[region]?.flatrate || [];
+      for (const p of regionProviders) {
+        if (!providerMap.has(p.provider_id)) {
+          providerMap.set(p.provider_id, p);
+        }
+      }
+    }
+    const providers = Array.from(providerMap.values());
     const year = parseInt(raw.release_date.split("-")[0], 10);
 
     if (isNaN(year) || year < 1970) continue; // skip very old or invalid
