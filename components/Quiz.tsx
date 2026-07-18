@@ -238,32 +238,32 @@ export default function Quiz() {
       style={{ background: "var(--md-surface-container)" }}
     >
       {stage === "intro" && (
-        <div className="text-center animate-in fade-in duration-500">
+        <div className="text-center">
           <div className="mb-8 flex justify-center">
             <div
-              className="h-20 w-20 rounded-3xl flex items-center justify-center font-display text-4xl shadow-xl"
+              className="h-20 w-20 rounded-3xl flex items-center justify-center font-display text-4xl shadow-xl animate-in zoom-in duration-700 fill-mode-both"
               style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
             >
               M
             </div>
           </div>
-          <h1 className="font-display text-4xl sm:text-5xl text-white mb-4 tracking-tight">
+          <h1 className="font-display text-4xl sm:text-5xl text-white mb-4 tracking-tight animate-in slide-in-from-bottom-8 fade-in duration-700 delay-150 fill-mode-both">
             What are we watching?
           </h1>
-          <p className="text-lg max-w-md mx-auto mb-10" style={{ color: "var(--md-on-surface-variant)" }}>
+          <p className="text-lg max-w-md mx-auto mb-10 animate-in slide-in-from-bottom-8 fade-in duration-700 delay-300 fill-mode-both" style={{ color: "var(--md-on-surface-variant)" }}>
             Answer a few quick questions and we&apos;ll find the perfect movie for your exact mood.
           </p>
 
           <button
             onClick={() => setStage("quiz")}
-            className="relative overflow-hidden font-display uppercase tracking-wide text-base px-10 py-4 rounded-full transition-transform hover:scale-105 active:scale-95 shadow-lg"
+            className="relative overflow-hidden font-display uppercase tracking-wide text-base px-10 py-4 rounded-full transition-transform hover:scale-105 active:scale-95 shadow-lg animate-in zoom-in fade-in duration-700 delay-500 fill-mode-both"
             style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
           >
             <md-ripple></md-ripple>
             Start Quiz
           </button>
 
-          <div className="mt-20">
+          <div className="mt-20 animate-in fade-in duration-1000 delay-700 fill-mode-both">
             <div className="grid grid-cols-3 gap-3 text-center mb-10">
               <div className="rounded-[var(--md-shape-md)] py-5" style={{ background: "var(--md-surface-container-low)" }}>
                 <p className="font-display text-2xl text-white">{moviePool.length > 0 ? moviePool.length : "…"}</p>
@@ -532,7 +532,7 @@ export default function Quiz() {
                   )}
                 </p>
                 <div className="mt-2 sm:mt-4 leading-relaxed text-left w-full" style={{ color: "var(--md-on-surface)" }}>
-                  <p className={!expandedSynopsis ? "line-clamp-2 sm:line-clamp-none text-sm sm:text-base" : "text-sm sm:text-base"}>
+                  <p className={!expandedSynopsis ? "line-clamp-1 sm:line-clamp-none text-sm sm:text-base" : "text-sm sm:text-base"}>
                     {current.blurb}
                   </p>
                   <button 
@@ -567,7 +567,7 @@ export default function Quiz() {
               </div>
             </div>
 
-            <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-3 shrink-0 pt-4 mt-2 sm:mt-auto">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-3 shrink-0 pt-4 pb-6 sm:pb-0 mt-4 sm:mt-auto sticky -bottom-6 sm:static z-10 bg-[var(--md-surface-container)] sm:bg-transparent border-t border-[var(--md-outline-variant)]/20 sm:border-0 -mx-6 px-6 sm:mx-0 sm:px-0 rounded-b-[var(--md-shape-xl)] sm:rounded-none">
                   <button
                     onClick={nextRecommendation}
                     className="relative overflow-hidden font-display uppercase tracking-wide text-sm px-6 py-3 rounded-full"

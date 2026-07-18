@@ -7,34 +7,35 @@
    gold / screen teal / velvet rose) doing three different jobs.
 ----------------------------------------------------------------*/
 :root {
-  --md-primary: #ffb86b;
-  --md-on-primary: #402d00;
-  --md-primary-container: #5c4200;
-  --md-on-primary-container: #ffddab;
+  /* Pastel Green Theme */
+  --md-primary: #8cd7aa;
+  --md-on-primary: #003820;
+  --md-primary-container: #005232;
+  --md-on-primary-container: #a8f3c5;
 
-  --md-secondary: #b7ccc7;
-  --md-on-secondary: #21362f;
-  --md-secondary-container: #263a34;
-  --md-on-secondary-container: #d3ebe4;
+  --md-secondary: #b1ccbd;
+  --md-on-secondary: #1d3528;
+  --md-secondary-container: #344b3e;
+  --md-on-secondary-container: #cde8d9;
 
-  --md-tertiary: #e8a8ab;
-  --md-on-tertiary: #4a2427;
-  --md-tertiary-container: #61363a;
-  --md-on-tertiary-container: #ffdadb;
+  --md-tertiary: #a3ccd6;
+  --md-on-tertiary: #04353e;
+  --md-tertiary-container: #234b56;
+  --md-on-tertiary-container: #bfe8f2;
 
   --md-error: #ffb4ab;
 
-  --md-surface: #121316;
-  --md-surface-dim: #0d0e10;
-  --md-surface-container-lowest: #0a0b0d;
-  --md-surface-container-low: #1a1c1f;
-  --md-surface-container: #1e2023;
-  --md-surface-container-high: #292b2f;
-  --md-surface-container-highest: #34363a;
-  --md-on-surface: #e5e2e1;
-  --md-on-surface-variant: #c9c6c4;
-  --md-outline: #938f8d;
-  --md-outline-variant: #444748;
+  --md-surface: #111412;
+  --md-surface-dim: #111412;
+  --md-surface-container-lowest: #0b0f0d;
+  --md-surface-container-low: #191c1b;
+  --md-surface-container: #1d201f;
+  --md-surface-container-high: #272b29;
+  --md-surface-container-highest: #323534;
+  --md-on-surface: #e1e3e0;
+  --md-on-surface-variant: #bfc9c2;
+  --md-outline: #8a938c;
+  --md-outline-variant: #404944;
 
   --md-shape-xs: 8px;
   --md-shape-sm: 12px;
