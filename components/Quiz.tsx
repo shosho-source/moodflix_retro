@@ -255,8 +255,8 @@ export default function Quiz() {
             Start Quiz
           </button>
 
-          <div className="mt-20 animate-in fade-in duration-1000 delay-700 fill-mode-both">
-            <div className="grid grid-cols-3 gap-3 text-center mb-10">
+          <div className="mt-12 sm:mt-20 animate-in fade-in duration-1000 delay-700 fill-mode-both">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center mb-8 sm:mb-10">
               <div className="rounded-[var(--md-shape-md)] py-5" style={{ background: "var(--md-surface-container-low)" }}>
                 <p className="font-display text-2xl text-white">{moviePool.length > 0 ? moviePool.length : "…"}</p>
                 <p className="text-[11px] uppercase tracking-[0.15em] mt-1" style={{ color: "var(--md-on-surface-variant)" }}>Movies</p>
