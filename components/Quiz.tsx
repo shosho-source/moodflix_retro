@@ -116,6 +116,12 @@ export default function Quiz() {
   const [moviePool, setMoviePool] = useState<Movie[]>([]);
   const [, setMovieSource] = useState<string>("loading");
 
+  const genreCount = useMemo(() => {
+    const genres = new Set<string>();
+    moviePool.forEach(m => m.genres.forEach(g => genres.add(g)));
+    return genres.size;
+  }, [moviePool]);
+
   // Fetch movies from API on mount
   useEffect(() => {
     let cancelled = false;
@@ -232,34 +238,51 @@ export default function Quiz() {
       style={{ background: "var(--md-surface-container)" }}
     >
       {stage === "intro" && (
-        <div className="text-center py-6">
-          <p
-            className="font-display text-xs uppercase tracking-[0.3em] mb-4"
-            style={{ color: "var(--md-primary)" }}
-          >
-            Six questions, one pick
-          </p>
-          <h1 className="font-display text-4xl sm:text-5xl text-white mb-4 leading-tight">
-            Stop scrolling.
-            <br />
-            Start watching.
-          </h1>
-          <p
-            className="max-w-md mx-auto mb-8 text-[15px] leading-relaxed"
-            style={{ color: "var(--md-on-surface-variant)" }}
-          >
-            Answer a few quick questions about your mood and the occasion. We&apos;ll hand you
-            one recommendation at a time — no lists, no registration.
-          </p>
-          <div className="mt-8">
-            <button
-              onClick={() => setStage("quiz")}
-              className="relative overflow-hidden font-display uppercase tracking-wide text-sm px-8 py-3.5 rounded-full transition-transform hover:scale-105 active:scale-95"
+        <div className="text-center animate-in fade-in duration-500">
+          <div className="mb-8 flex justify-center">
+            <div
+              className="h-20 w-20 rounded-3xl flex items-center justify-center font-display text-4xl shadow-xl"
               style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
             >
-              <md-ripple></md-ripple>
-              Start now
-            </button>
+              M
+            </div>
+          </div>
+          <h1 className="font-display text-4xl sm:text-5xl text-white mb-4 tracking-tight">
+            What are we watching?
+          </h1>
+          <p className="text-lg max-w-md mx-auto mb-10" style={{ color: "var(--md-on-surface-variant)" }}>
+            Answer a few quick questions and we&apos;ll find the perfect movie for your exact mood.
+          </p>
+
+          <button
+            onClick={() => setStage("quiz")}
+            className="relative overflow-hidden font-display uppercase tracking-wide text-base px-10 py-4 rounded-full transition-transform hover:scale-105 active:scale-95 shadow-lg"
+            style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
+          >
+            <md-ripple></md-ripple>
+            Start Quiz
+          </button>
+
+          <div className="mt-20">
+            <div className="grid grid-cols-3 gap-3 text-center mb-10">
+              <div className="rounded-[var(--md-shape-md)] py-5" style={{ background: "var(--md-surface-container-low)" }}>
+                <p className="font-display text-2xl text-white">{moviePool.length > 0 ? moviePool.length : "…"}</p>
+                <p className="text-[11px] uppercase tracking-[0.15em] mt-1" style={{ color: "var(--md-on-surface-variant)" }}>Movies</p>
+              </div>
+              <div className="rounded-[var(--md-shape-md)] py-5" style={{ background: "var(--md-surface-container-low)" }}>
+                <p className="font-display text-2xl text-white">{genreCount > 0 ? genreCount : "…"}</p>
+                <p className="text-[11px] uppercase tracking-[0.15em] mt-1" style={{ color: "var(--md-on-surface-variant)" }}>Genres</p>
+              </div>
+              <div className="rounded-[var(--md-shape-md)] py-5" style={{ background: "var(--md-surface-container-low)" }}>
+                <p className="font-display text-2xl text-white">TMDB</p>
+                <p className="text-[11px] uppercase tracking-[0.15em] mt-1" style={{ color: "var(--md-on-surface-variant)" }}>Powered by</p>
+              </div>
+            </div>
+            <footer className="border-t py-6" style={{ borderColor: "var(--md-outline-variant)" }}>
+              <p className="text-center text-xs" style={{ color: "var(--md-on-surface-variant)" }}>
+                Movie data provided by TMDB.
+              </p>
+            </footer>
           </div>
         </div>
       )}
@@ -449,7 +472,7 @@ export default function Quiz() {
               <div className="absolute inset-0 bg-black/80 backdrop-blur-[8px]" />
             </motion.div>
           )}
-          <div className="flex flex-col h-[85vh] sm:h-auto animate-in slide-in-from-bottom-8 fade-in duration-700">
+          <div className="flex flex-col animate-in slide-in-from-bottom-8 fade-in duration-700">
             <div className="flex items-center justify-between mb-4 shrink-0">
               <p
                 className="font-display text-xs uppercase tracking-[0.3em]"
@@ -468,8 +491,8 @@ export default function Quiz() {
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto no-scrollbar pb-6 flex flex-col sm:flex-row gap-6">
-              <div className="w-32 mx-auto sm:w-48 sm:mx-0 shrink-0">
+            <div className="flex-1 pb-6 flex flex-row gap-4 sm:gap-6">
+              <div className="w-36 sm:w-48 shrink-0">
                 <PosterCard movie={current} />
               </div>
               <div className="flex-1 flex flex-col">
