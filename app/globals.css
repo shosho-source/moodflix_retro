@@ -1,10 +1,9 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------
-   MD3-inspired token system — "Late Show" cinema theme
-   Not a generic dark+single-accent scheme: full M3 tonal roles,
-   layered surface elevations, and three distinct hues (marquee
-   gold / screen teal / velvet rose) doing three different jobs.
+   MD3-inspired token system — Light Pastel Green / PixelOS theme
+   Full M3 tonal roles with layered surface elevations.
+   Primary: forest green. Surface: soft greenish-white.
 ----------------------------------------------------------------*/
 :root {
   /* Light Pastel Green Theme */
@@ -84,8 +83,10 @@ body {
   font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap');
+
 .font-display {
-  font-family: "Arial Narrow", "Roboto Condensed", Roboto, sans-serif;
+  font-family: "Roboto Condensed", "Arial Narrow", Roboto, sans-serif;
   font-stretch: condensed;
   letter-spacing: 0.01em;
 }

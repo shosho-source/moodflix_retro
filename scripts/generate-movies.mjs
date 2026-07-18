@@ -97,11 +97,15 @@ const genreList = [
 
 const dateGenres = ["Action", "Comedy", "Romantic Comedy", "Romance"];
 
-const content = "import { Movie } from \\"./types\\";\\n\\n" +
-"// Extensively hand-tagged library mimicking the real site's database.\\n" +
-"export const movies: Movie[] = " + JSON.stringify(movies, null, 2) + ";\\n\\n" +
-"export const genreList = " + JSON.stringify(genreList, null, 2) + ";\\n\\n" +
-"export const dateGenres = " + JSON.stringify(dateGenres, null, 2) + ";\\n";
+const content = `import { Movie } from "./types";
+
+// Extensively hand-tagged library mimicking the real site's database.
+export const movies: Movie[] = ${JSON.stringify(movies, null, 2)};
+
+export const genreList = ${JSON.stringify(genreList, null, 2)};
+
+export const dateGenres = ${JSON.stringify(dateGenres, null, 2)};
+`;
 
 writeFileSync("lib/movies.ts", content);
 console.log("Successfully generated movies.ts with", movies.length, "movies.");

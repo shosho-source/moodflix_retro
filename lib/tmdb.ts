@@ -145,13 +145,13 @@ interface TMDBMovieDetail {
 }
 
 // ─── Core fetch helper ───────────────────────────────────────────
-import http from "node:http";
+import https from "node:https";
 
-const TMDB_BASE = "http://api.themoviedb.org/3";
+const TMDB_BASE = "https://api.themoviedb.org/3";
 
 function httpGet(url: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    http
+    https
       .get(url, (res) => {
         let data = "";
         res.on("data", (chunk: Buffer) => (data += chunk.toString()));
@@ -255,6 +255,11 @@ function inferOccasions(genreIds: number[], rating: Rating): Occasion[] {
   }
   // Romance + Comedy → date
   if (genreIds.includes(10749) && genreIds.includes(35)) {
+    occasions.add("date");
+    occasions.add("partner");
+  }
+  // Ensure date ↔ partner symmetry: picking either should match the same movies
+  if (occasions.has("date") || occasions.has("partner")) {
     occasions.add("date");
     occasions.add("partner");
   }

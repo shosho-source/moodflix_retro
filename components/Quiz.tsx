@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Movie, QuizAnswers, emptyAnswers, Rating, Category } from "@/lib/types";
@@ -31,7 +31,7 @@ const genreIcons: Record<string, string> = {
   Western: "explore"
 };
 
-type Stage = "intro" | "quiz" | "result" | "empty" | "loading" | "calculating" | "splash";
+type Stage = "intro" | "quiz" | "result" | "empty" | "loading" | "splash";
 
 const moodOptions = [
   { value: "happy", label: "Happy", sub: "In the mood for something upbeat" },
@@ -102,12 +102,6 @@ function Step({
 
 function MatchBadge({ score, max }: { score: number; max: number }) {
   const pct = max > 0 ? Math.round((score / max) * 100) : 0;
-  const color =
-    pct >= 80
-      ? "hsl(140, 60%, 50%)"
-      : pct >= 60
-        ? "hsl(45, 80%, 55%)"
-        : "hsl(0, 60%, 55%)";
 
   return (
     <span
@@ -124,6 +118,17 @@ export default function Quiz() {
   const [stage, setStage] = useState<Stage>("splash");
   const [answers, setAnswers] = useState<QuizAnswers>(emptyAnswers);
   const [showTrailer, setShowTrailer] = useState(false);
+
+  // Close trailer on Escape key
+  const closeTrailer = useCallback(() => setShowTrailer(false), []);
+  useEffect(() => {
+    if (!showTrailer) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeTrailer();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [showTrailer, closeTrailer]);
   const [stepIndex, setStepIndex] = useState(0);
   const [resultIndex, setResultIndex] = useState(0);
   const [expandedSynopsis, setExpandedSynopsis] = useState(false);
@@ -146,7 +151,7 @@ export default function Quiz() {
     async function load() {
       try {
         const fetchPromise = fetch("/api/movies").then(res => res.json());
-        const minTimerPromise = new Promise(resolve => setTimeout(resolve, 10000));
+        const minTimerPromise = new Promise(resolve => setTimeout(resolve, 2500));
         
         const [data] = await Promise.all([fetchPromise, minTimerPromise]);
 
@@ -156,8 +161,14 @@ export default function Quiz() {
           setStage("intro");
         }
       } catch {
-        // If API fails, movies.ts fallback is already in the pool via API route
+        // If API is unreachable, import the bundled fallback directly
         if (!cancelled) {
+          try {
+            const { movies: fallback } = await import("@/lib/movies");
+            setMoviePool(fallback);
+          } catch {
+            // Even the fallback import failed — leave pool empty
+          }
           setStage("intro");
         }
       }
@@ -449,21 +460,6 @@ export default function Quiz() {
         </div>
       )}
 
-      {stage === "calculating" && (
-        <div className="flex flex-col items-center justify-center py-20 gap-6 text-center animate-in fade-in zoom-in duration-500">
-          <div className="w-full max-w-xs">
-            <md-linear-progress indeterminate></md-linear-progress>
-          </div>
-          <div>
-            <h2 className="font-display text-2xl mb-2" style={{ color: "var(--md-on-surface)" }}>
-              Calculating Match
-            </h2>
-            <p className="text-sm max-w-xs mx-auto" style={{ color: "var(--md-on-surface-variant)" }}>
-              Analyzing {moviePool.length} movies against your answers...
-            </p>
-          </div>
-        </div>
-      )}
 
       {stage === "result" && current && (
         <>
@@ -642,10 +638,13 @@ export default function Quiz() {
       )}
 
       {showTrailer && current?.trailerKey && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
+          onClick={(e) => { if (e.target === e.currentTarget) closeTrailer(); }}
+        >
           <div className="relative w-full max-w-5xl aspect-video bg-black rounded-[var(--md-shape-xl)] overflow-hidden shadow-2xl ring-1 ring-white/10">
             <div className="absolute top-4 right-4 z-10 bg-black/40 hover:bg-black/80 rounded-full backdrop-blur-md transition-colors text-white">
-              <md-icon-button onClick={() => setShowTrailer(false)}>
+              <md-icon-button onClick={closeTrailer}>
                 <md-icon>close</md-icon>
               </md-icon-button>
             </div>
