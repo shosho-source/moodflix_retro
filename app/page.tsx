@@ -31,10 +31,8 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col">
-        <div className="flex-1 max-w-3xl w-full mx-auto px-6 py-6 sm:py-16 flex flex-col justify-center">
-          <Quiz />
-        </div>
+      <main className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-16">
+        <Quiz />
       </main>
     </div>
   );

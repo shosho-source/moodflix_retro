@@ -491,12 +491,12 @@ export default function Quiz() {
               </div>
             </div>
             
-            <div className="flex-1 pb-6 flex flex-row gap-4 sm:gap-6">
-              <div className="w-36 sm:w-48 shrink-0">
+            <div className="flex-1 pb-6 flex flex-col sm:flex-row gap-6 sm:gap-8">
+              <div className="w-56 mx-auto sm:w-64 sm:mx-0 shrink-0 drop-shadow-2xl">
                 <PosterCard movie={current} />
               </div>
-              <div className="flex-1 flex flex-col">
-                <div className="flex flex-wrap gap-2 mb-3">
+              <div className="flex-1 flex flex-col items-center text-center sm:items-start sm:text-left">
+                <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-4">
                   {current.genres.map((g) => (
                     <span
                       key={g}
@@ -531,12 +531,12 @@ export default function Quiz() {
                     </span>
                   )}
                 </p>
-                <div className="mt-3 leading-relaxed" style={{ color: "var(--md-on-surface)" }}>
-                  <p className={!expandedSynopsis ? "line-clamp-2 sm:line-clamp-none text-sm sm:text-base" : "text-sm sm:text-base"}>
+                <div className="mt-4 leading-relaxed text-left w-full" style={{ color: "var(--md-on-surface)" }}>
+                  <p className={!expandedSynopsis ? "line-clamp-3 sm:line-clamp-none text-sm sm:text-base" : "text-sm sm:text-base"}>
                     {current.blurb}
                   </p>
                   <button 
-                    className="text-xs font-medium uppercase tracking-wider sm:hidden mt-2" 
+                    className="text-xs font-bold uppercase tracking-wider sm:hidden mt-2" 
                     style={{ color: "var(--md-primary)" }}
                     onClick={() => setExpandedSynopsis(!expandedSynopsis)}
                   >
@@ -567,7 +567,7 @@ export default function Quiz() {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 sm:gap-3 shrink-0 pt-4 border-t sm:border-t-0 border-[var(--md-outline-variant)]/30 sm:mt-8 mt-auto bg-[var(--md-surface)] sm:bg-transparent pb-4 sm:pb-0">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-3 shrink-0 pt-6 mt-4 sm:mt-auto">
                   <button
                     onClick={nextRecommendation}
                     className="relative overflow-hidden font-display uppercase tracking-wide text-sm px-6 py-3 rounded-full"
