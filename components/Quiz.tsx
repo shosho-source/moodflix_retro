@@ -256,7 +256,7 @@ export default function Quiz() {
       style={{ background: "var(--md-surface-container)" }}
     >
       {stage === "intro" && (
-        <div className="text-center">
+        <div className="text-center pt-8 sm:pt-0">
           <h1 className="font-display text-4xl sm:text-5xl mb-4 tracking-tight animate-in slide-in-from-bottom-8 fade-in duration-700 delay-150 fill-mode-both" style={{ color: "var(--md-on-surface)" }}>
             What are we watching?
           </h1>
@@ -486,7 +486,7 @@ export default function Quiz() {
             <div className="flex items-center justify-between mb-4 sm:mb-6 shrink-0 w-full">
               <div className="flex items-center gap-2 font-display text-xs sm:text-sm uppercase tracking-wider font-bold" style={{ color: "var(--md-primary)" }}>
                 <div className="flex items-center justify-center w-6 h-6 rounded-full" style={{ background: "var(--md-primary-container)" }}>
-                  <span className="material-symbols-outlined text-[14px]">sparkle</span>
+                  <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
                 </div>
                 <span>Tonight&apos;s pick</span>
               </div>
@@ -588,34 +588,34 @@ export default function Quiz() {
               </div>
             </div>
 
-            <div className="flex w-full justify-between sm:justify-start gap-2 sm:gap-3 shrink-0 pt-4 pb-6 sm:pb-0 mt-4 sm:mt-auto sticky -bottom-6 sm:static z-10 bg-[var(--md-surface-container)] sm:bg-transparent -mx-6 px-6 sm:mx-0 sm:px-0 rounded-b-[var(--md-shape-xl)] sm:rounded-none">
+            <div className="flex w-full justify-between sm:justify-start gap-1 sm:gap-3 shrink-0 pt-4 pb-6 sm:pb-0 mt-4 sm:mt-auto sticky -bottom-6 sm:static z-10 bg-[var(--md-surface-container)] sm:bg-transparent -mx-6 px-6 sm:mx-0 sm:px-0 rounded-b-[var(--md-shape-xl)] sm:rounded-none">
                   <button
                     onClick={nextRecommendation}
-                    className="relative flex items-center justify-center gap-1.5 flex-1 sm:flex-none overflow-hidden font-display uppercase font-bold tracking-wider text-[11px] sm:text-sm px-2 sm:px-6 py-3 rounded-full whitespace-nowrap"
+                    className="relative flex items-center justify-center gap-1 sm:gap-1.5 flex-1 sm:flex-none overflow-hidden font-display uppercase font-bold tracking-wide text-[9px] sm:text-sm px-1 sm:px-6 py-3 rounded-full whitespace-nowrap"
                     style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
                   >
                     <md-ripple></md-ripple>
-                    <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">arrow_forward</span>
                     Next
                   </button>
                   {current.trailerKey && (
                     <button
                       onClick={() => setShowTrailer(true)}
-                      className="relative flex items-center justify-center gap-1.5 flex-1 sm:flex-none overflow-hidden font-display uppercase font-bold tracking-wider text-[11px] sm:text-sm px-2 sm:px-6 py-3 rounded-full whitespace-nowrap"
+                      className="relative flex items-center justify-center gap-1 sm:gap-1.5 flex-1 sm:flex-none overflow-hidden font-display uppercase font-bold tracking-wide text-[9px] sm:text-sm px-1 sm:px-6 py-3 rounded-full whitespace-nowrap"
                       style={{ background: "var(--md-primary-container)", color: "var(--md-on-primary-container)" }}
                     >
                       <md-ripple></md-ripple>
-                      <span className="material-symbols-outlined text-[16px] filled">play_arrow</span>
+                      <span className="material-symbols-outlined text-[14px] sm:text-[16px] filled">play_arrow</span>
                       Trailer
                     </button>
                   )}
                   <button
                     onClick={restart}
-                    className="relative flex items-center justify-center gap-1.5 flex-1 sm:flex-none overflow-hidden font-display uppercase font-bold tracking-wider text-[11px] sm:text-sm px-2 sm:px-6 py-3 rounded-full border border-[var(--md-primary)] whitespace-nowrap"
+                    className="relative flex items-center justify-center gap-1 sm:gap-1.5 flex-1 sm:flex-none overflow-hidden font-display uppercase font-bold tracking-wide text-[9px] sm:text-sm px-1 sm:px-6 py-3 rounded-full border border-[var(--md-primary)] whitespace-nowrap"
                     style={{ color: "var(--md-primary)", background: "transparent" }}
                   >
                     <md-ripple></md-ripple>
-                    <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+                    <span className="material-symbols-outlined text-[14px] sm:text-[16px]">restart_alt</span>
                     Retake Quiz
                   </button>
                 </div>
