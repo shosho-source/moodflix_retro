@@ -219,7 +219,7 @@ export default function MovieResult({
               </button>
 
               {/* Content area: hidden on mobile unless toggled, always block on sm */}
-              <div className={`p-3 sm:p-4 pt-0 sm:pt-4 ${showProviders ? 'block' : 'hidden sm:block'} border-t-2 sm:border-t-0 border-[var(--retro-border)]`}>
+              <div className={`p-3 sm:p-4 ${showProviders ? 'block' : 'hidden sm:block'} border-t-2 sm:border-t-0 border-[var(--retro-border)]`}>
                 {/* Desktop header */}
                 <p className="hidden sm:flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.1em] mb-3">
                   <span className="text-xs">&gt;&gt;</span>
