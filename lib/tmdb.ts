@@ -82,6 +82,8 @@ export const CATEGORY_KEYWORD_MAP: Record<Category, number[]> = {
   "sad-ending": [12133, 10738],     // tragedy, tearjerker
   "documentary": [],                // mapped by genre ID 99
   "tv-series": [],                  // mapped by media type
+  "coming-of-age": [10683],         // coming of age
+  "queer": [158718, 15814, 9729],   // lgbt, homosexuality, lesbian
 };
 
 // ─── TMDB certification → our Rating ─────────────────────────────
@@ -320,6 +322,12 @@ function inferCategories(
   if (kwNames.has("female protagonist") || kwNames.has("feminism") || kwNames.has("strong woman") || kwNames.has("women's rights")) {
     categories.add("girl-power");
   }
+  if (kwNames.has("coming of age") || kwNames.has("coming-of-age") || kwNames.has("teenager") || kwNames.has("adolescence")) {
+    categories.add("coming-of-age");
+  }
+  if (kwNames.has("queer") || kwNames.has("lgbt") || kwNames.has("lgbtq") || kwNames.has("gay") || kwNames.has("lesbian") || kwNames.has("homosexuality") || kwNames.has("bisexual") || kwNames.has("transgender")) {
+    categories.add("queer");
+  }
   if (kwNames.has("tragedy") || kwNames.has("tearjerker") || kwNames.has("melancholy") || kwNames.has("sad ending")) {
     categories.add("sad-ending");
   }
@@ -484,6 +492,8 @@ export async function fetchTMDBMovies(): Promise<Movie[]> {
     fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "16,10751" }),
     fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "53,80" }),
     fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "18,36" }),
+    fetchDiscoverPage(randomPage(5), { ...genreParams, with_keywords: "10683" }), // coming of age
+    fetchDiscoverPage(randomPage(5), { ...genreParams, with_keywords: "158718|15814|9729" }), // queer
   ];
 
   // Step 3: Fetch TV Shows
