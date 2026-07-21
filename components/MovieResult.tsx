@@ -61,6 +61,7 @@ export default function MovieResult({
   const [expandedBlurbId, setExpandedBlurbId] = useState<string | null>(null);
   const expandedBlurb = expandedBlurbId === movie.id;
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
+  const [showProviders, setShowProviders] = useState(false);
 
   useEffect(() => {
     if (movie.tmdbId) {
@@ -182,7 +183,7 @@ export default function MovieResult({
               <p className={`${expandedBlurb ? '' : 'line-clamp-3'} text-xs sm:text-sm font-medium transition-all`}>
                 {movie.blurb}
               </p>
-              {movie.blurb.length > 220 && (
+              {movie.blurb.length > 130 && (
                 <button 
                   onClick={() => setExpandedBlurbId(expandedBlurb ? null : movie.id)}
                   className="text-[10px] sm:text-xs font-mono font-bold mt-1 sm:mt-2 uppercase text-[var(--retro-border)] hover:text-white transition-colors"
@@ -192,37 +193,55 @@ export default function MovieResult({
               )}
             </div>
 
-            <div className="mt-6 w-full brutalist-box p-3 sm:p-4 text-left shrink-0">
-              <p className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.1em] mb-3">
-                <span className="text-xs">&gt;&gt;</span>
-                STREAMING_SOURCES
-              </p>
-              {uniqueProviders.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {uniqueProviders.map(p => (
-                    <a
-                      key={p.provider_id}
-                      href={getProviderLink(p.provider_name, movie.title)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="transition-transform hover:scale-110 inline-block"
-                    >
-                      <Image 
-                        src={`https://image.tmdb.org/t/p/original${p.logo_path}`} 
-                        alt={p.provider_name}
-                        title={`Watch on ${p.provider_name}`}
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 border border-[var(--retro-border)] bg-white cursor-pointer" 
-                      />
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs font-mono font-bold">
-                  [NO_DATA_AVAILABLE]
+            <div className="mt-6 w-full brutalist-box text-left shrink-0">
+              {/* Mobile toggle button */}
+              <button 
+                onClick={() => setShowProviders(!showProviders)}
+                className="w-full p-3 flex sm:hidden items-center justify-between hover:bg-[var(--retro-border)] hover:text-white transition-colors"
+              >
+                <p className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.1em]">
+                  <span className="text-[10px]">&gt;&gt;</span>
+                  STREAMING_SOURCES
                 </p>
-              )}
+                <span className="font-mono font-bold text-xs">
+                  {showProviders ? "[-]" : "[+]"}
+                </span>
+              </button>
+
+              {/* Content area: hidden on mobile unless toggled, always block on sm */}
+              <div className={`p-3 sm:p-4 pt-0 sm:pt-4 ${showProviders ? 'block' : 'hidden sm:block'} border-t-2 sm:border-t-0 border-[var(--retro-border)]`}>
+                {/* Desktop header */}
+                <p className="hidden sm:flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.1em] mb-3">
+                  <span className="text-xs">&gt;&gt;</span>
+                  STREAMING_SOURCES
+                </p>
+                {uniqueProviders.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {uniqueProviders.map(p => (
+                      <a
+                        key={p.provider_id}
+                        href={getProviderLink(p.provider_name, movie.title)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transition-transform hover:scale-110 inline-block"
+                      >
+                        <Image 
+                          src={`https://image.tmdb.org/t/p/original${p.logo_path}`} 
+                          alt={p.provider_name}
+                          title={`Watch on ${p.provider_name}`}
+                          width={32}
+                          height={32}
+                          className="w-8 h-8 border border-[var(--retro-border)] bg-white cursor-pointer" 
+                        />
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs font-mono font-bold">
+                    [NO_DATA_AVAILABLE]
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -231,9 +250,10 @@ export default function MovieResult({
           {movie.trailerKey && (
             <button
               onClick={() => setShowTrailer(true)}
-              className="brutalist-button py-3 px-6 text-sm"
+              className="brutalist-button py-3 px-2 sm:px-6 text-sm"
             >
-              [PLAY_TRAILER]
+              <span className="sm:hidden">[TRAILER]</span>
+              <span className="hidden sm:inline">[PLAY_TRAILER]</span>
             </button>
           )}
           {onRestart && (
