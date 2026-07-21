@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Movie } from "@/lib/types";
@@ -62,6 +62,13 @@ export default function MovieResult({
   const expandedBlurb = expandedBlurbId === movie.id;
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
   const [showProviders, setShowProviders] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [movie.id]);
 
   useEffect(() => {
     if (movie.tmdbId) {
@@ -131,7 +138,7 @@ export default function MovieResult({
         </motion.div>
       )}
       <div className="flex flex-col animate-in slide-in-from-bottom-8 fade-in duration-700 w-full h-full">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 sm:pr-2">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 sm:pr-2">
         {showHeader && (
           <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4 sm:mb-6 shrink-0 w-full border-b-2 border-[var(--retro-border)] pb-4">
             <div className="flex items-center gap-2 font-mono text-xs sm:text-sm uppercase tracking-wider font-bold">
@@ -246,7 +253,7 @@ export default function MovieResult({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-start gap-4 shrink-0 pt-6 mt-6 sm:mt-8 border-t-2 border-[var(--retro-border)] relative z-10 w-full">
+        <div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-start gap-4 shrink-0 pt-4 pb-4 mt-6 sm:mt-8 border-t-2 border-[var(--retro-border)] sticky bottom-0 bg-[var(--retro-surface)] z-30 w-full">
           {movie.trailerKey && (
             <button
               onClick={() => setShowTrailer(true)}
