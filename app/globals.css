@@ -14,24 +14,27 @@ html, body {
   overflow: hidden;
   margin: 0;
   padding: 0;
+  width: 100%;
 }
 
-/* Retro scrollbars */
-*::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
-}
-*::-webkit-scrollbar-track {
-  background: var(--retro-surface);
-  border: 1px solid var(--retro-border);
-}
-*::-webkit-scrollbar-thumb {
-  background: var(--retro-accent);
-  border: 1px solid var(--retro-border);
-}
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--retro-accent) var(--retro-surface);
+/* Retro scrollbars only on desktop (pointer: fine) so mobile keeps native auto-hiding scrollbars */
+@media (pointer: fine) {
+  *::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  *::-webkit-scrollbar-track {
+    background: var(--retro-surface);
+    border: 1px solid var(--retro-border);
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--retro-accent);
+    border: 1px solid var(--retro-border);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--retro-accent) var(--retro-surface);
+  }
 }
 
 body {
@@ -40,7 +43,7 @@ body {
   font-family: var(--font-inter), -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   height: 100dvh;
-  width: 100vw;
+  width: 100%;
   display: flex;
   flex-direction: column;
 }

@@ -130,7 +130,7 @@ export default function MovieResult({
         </motion.div>
       )}
       <div className="flex flex-col animate-in slide-in-from-bottom-8 fade-in duration-700 w-full h-full">
-        <div className="flex-1 overflow-y-auto min-h-0 sm:pr-2">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 sm:pr-2">
         {showHeader && (
           <div className="flex items-center justify-between mb-4 sm:mb-6 shrink-0 w-full border-b-2 border-[var(--retro-border)] pb-4">
             <div className="flex items-center gap-2 font-mono text-xs sm:text-sm uppercase tracking-wider font-bold">
