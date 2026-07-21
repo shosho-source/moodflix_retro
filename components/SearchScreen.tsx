@@ -210,8 +210,9 @@ export default function SearchScreen() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.25 }}
+              className="flex flex-col h-full overflow-hidden"
             >
-              <div className="rounded-none p-6 sm:p-10 shadow-2xl" >
+              <div className="brutalist-box brutalist-shadow p-4 sm:p-6 flex flex-col h-full overflow-y-auto" >
                 <MovieResult
                   movie={selectedMovie}
                   showHeader={false}
