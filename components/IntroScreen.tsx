@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 
 interface IntroScreenProps {
   movieCount: number;
