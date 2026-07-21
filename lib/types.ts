@@ -18,7 +18,10 @@ export type Category =
   | "racing"
   | "girl-power"
   | "vegas"
-  | "top-250";
+  | "top-250"
+  | "sad-ending"
+  | "documentary"
+  | "tv-series";
 
 export interface Movie {
   id: string;
@@ -42,6 +45,7 @@ export interface Movie {
     logo_path: string;
   }>;
   voteAverage?: number; // TMDB vote average (0–10)
+  mediaType?: "movie" | "tv";
 }
 
 export interface QuizAnswers {
@@ -52,6 +56,7 @@ export interface QuizAnswers {
   ratingsMatter: boolean | null;
   ratings: Rating[];
   category: Category | "none" | null;
+  mediaPreference: "movies" | "tv" | "both" | null;
 }
 
 export const emptyAnswers: QuizAnswers = {
@@ -62,4 +67,5 @@ export const emptyAnswers: QuizAnswers = {
   ratingsMatter: null,
   ratings: [],
   category: null,
+  mediaPreference: null,
 };

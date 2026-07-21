@@ -10,6 +10,7 @@ import {
   recencyOptions,
   ratingOptions,
   categoryOptions,
+  mediaPreferenceOptions,
 } from "./QuizConstants";
 
 interface QuizStepsProps {
@@ -115,6 +116,19 @@ export default function QuizSteps({
                   label={o.label}
                   selected={answers.occasion === o.value}
                   onClick={() => onUpdateAnswers((a) => ({ ...a, occasion: o.value }))}
+                />
+              ))}
+            </Step>
+          )}
+
+          {stepKey === "media" && (
+            <Step title="Movies or TV Series?">
+              {mediaPreferenceOptions.map((o) => (
+                <OptionCard
+                  key={o.value}
+                  label={o.label}
+                  selected={answers.mediaPreference === o.value}
+                  onClick={() => onUpdateAnswers((a) => ({ ...a, mediaPreference: o.value }))}
                 />
               ))}
             </Step>

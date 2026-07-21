@@ -79,6 +79,9 @@ export const CATEGORY_KEYWORD_MAP: Record<Category, number[]> = {
   "girl-power": [],                 // inferred from genre patterns
   "vegas": [1224],                  // las vegas
   "top-250": [],                    // inferred from vote_average
+  "sad-ending": [12133, 10738],     // tragedy, tearjerker
+  "documentary": [],                // mapped by genre ID 99
+  "tv-series": [],                  // mapped by media type
 };
 
 // ─── TMDB certification → our Rating ─────────────────────────────
@@ -105,6 +108,9 @@ interface TMDBMovie {
   vote_average: number;
   vote_count: number;
   adult: boolean;
+  name?: string; // For TV shows
+  first_air_date?: string; // For TV shows
+  media_type?: "movie" | "tv";
 }
 
 interface TMDBDiscoverResponse {
@@ -130,7 +136,8 @@ interface TMDBMovieDetail {
   runtime: number | null;
   release_dates: TMDBReleaseDates;
   keywords: {
-    keywords: Array<{ id: number; name: string }>;
+    keywords?: Array<{ id: number; name: string }>;
+    results?: Array<{ id: number; name: string }>; // TV uses results sometimes
   };
   videos?: {
     results: Array<{ key: string; site: string; type: string }>;
@@ -140,6 +147,10 @@ interface TMDBMovieDetail {
       flatrate?: Array<{ provider_id: number; provider_name: string; logo_path: string }>;
     }>;
   };
+  content_ratings?: {
+    results: Array<{ iso_3166_1: string, rating: string }>;
+  };
+  episode_run_time?: number[];
 }
 
 // ─── Core fetch helper (uses global fetch instead of node:https) ─
@@ -167,29 +178,40 @@ async function tmdbFetch<T>(path: string, params: Record<string, string> = {}): 
 // ─── Fetch discover pages ────────────────────────────────────────
 async function fetchDiscoverPage(
   page: number,
-  extraParams: Record<string, string> = {}
+  extraParams: Record<string, string> = {},
+  type: "movie" | "tv" = "movie"
 ): Promise<TMDBMovie[]> {
-  const data = await tmdbFetch<TMDBDiscoverResponse>("/discover/movie", {
+  const data = await tmdbFetch<TMDBDiscoverResponse>(`/discover/${type}`, {
     sort_by: "vote_average.desc",
-    "vote_count.gte": "300",
+    "vote_count.gte": type === "movie" ? "300" : "100",
     include_adult: "false",
     language: "en-US",
     with_original_language: "en",
     ...extraParams,
     page: String(page), // page MUST come last to avoid being overridden
   });
-  return data.results;
+  return data.results.map(r => ({ ...r, media_type: type }));
 }
 
 // ─── Fetch movie details (runtime + US certification + keywords) ──
-async function fetchMovieDetail(id: number): Promise<TMDBMovieDetail> {
-  return tmdbFetch<TMDBMovieDetail>(`/movie/${id}`, {
-    append_to_response: "release_dates,keywords,videos,watch/providers",
+async function fetchMovieDetail(id: number, mediaType: "movie" | "tv" = "movie"): Promise<TMDBMovieDetail> {
+  return tmdbFetch<TMDBMovieDetail>(`/${mediaType}/${id}`, {
+    append_to_response: mediaType === "tv" ? "content_ratings,keywords,videos,watch/providers" : "release_dates,keywords,videos,watch/providers",
     language: "en-US",
   });
 }
 
-function getUSCertification(detail: TMDBMovieDetail): Rating {
+function getUSCertification(detail: TMDBMovieDetail, mediaType: "movie" | "tv" = "movie"): Rating {
+  if (mediaType === "tv" && detail.content_ratings) {
+    const usEntry = detail.content_ratings.results.find((r) => r.iso_3166_1 === "US");
+    if (usEntry) {
+      if (usEntry.rating.includes("14") || usEntry.rating.includes("PG")) return "PG-13";
+      if (usEntry.rating.includes("MA")) return "R";
+      if (usEntry.rating.includes("G") || usEntry.rating.includes("Y")) return "G";
+    }
+    return "PG-13";
+  }
+
   const usEntry = detail.release_dates?.results?.find((r) => r.iso_3166_1 === "US");
   if (!usEntry) return "PG-13";
   // prefer theatrical (type 3) or limited theatrical (type 2)
@@ -298,10 +320,14 @@ function inferCategories(
   if (kwNames.has("female protagonist") || kwNames.has("feminism") || kwNames.has("strong woman") || kwNames.has("women's rights")) {
     categories.add("girl-power");
   }
+  if (kwNames.has("tragedy") || kwNames.has("tearjerker") || kwNames.has("melancholy") || kwNames.has("sad ending")) {
+    categories.add("sad-ending");
+  }
 
   // Genre-based inference
   if (genreIds.includes(36)) categories.add("true-story"); // History genre
   if (genreIds.includes(878)) categories.add("space");     // Sci-Fi heuristic
+  if (genreIds.includes(99)) categories.add("documentary"); // Documentary genre
 
   // Top-250 heuristic: high rating + many votes
   if (voteAvg >= 7.5 && voteCount >= 2000) {
@@ -311,6 +337,11 @@ function inferCategories(
   // Perspective-shift: highly rated dramas
   if (voteAvg >= 7.8 && genreIds.includes(18)) {
     categories.add("perspective-shift");
+  }
+  
+  // Sad-ending: highly rated romance + drama, or high-rated tragedies
+  if (voteAvg >= 7.5 && genreIds.includes(10749) && genreIds.includes(18)) {
+    categories.add("sad-ending");
   }
 
   return [...categories];
@@ -350,7 +381,7 @@ async function enrichMovies(rawMovies: TMDBMovie[]): Promise<Movie[]> {
   for (let i = 0; i < rawMovies.length; i += BATCH_SIZE) {
     const batch = rawMovies.slice(i, i + BATCH_SIZE);
     const batchResults = await Promise.all(
-      batch.map((m) => fetchMovieDetail(m.id).catch(() => null))
+      batch.map((m) => fetchMovieDetail(m.id, m.media_type || "movie").catch(() => null))
     );
     for (const detail of batchResults) {
       if (detail) details.set(detail.id, detail);
@@ -365,9 +396,15 @@ async function enrichMovies(rawMovies: TMDBMovie[]): Promise<Movie[]> {
 
   for (const raw of rawMovies) {
     const detail = details.get(raw.id);
-    const rating = detail ? getUSCertification(detail) : (raw.adult ? "R" : "PG-13");
-    const keywords = detail?.keywords?.keywords ?? [];
-    const runtime = detail?.runtime ?? 120; // fallback runtime
+    const mediaType = raw.media_type || "movie";
+    const rating = detail ? getUSCertification(detail, mediaType) : (raw.adult ? "R" : "PG-13");
+    const keywords = detail?.keywords?.keywords || detail?.keywords?.results || [];
+    
+    // For TV, use episode_run_time if available
+    let runtime = detail?.runtime ?? 120;
+    if (mediaType === "tv" && detail?.episode_run_time && detail.episode_run_time.length > 0) {
+      runtime = detail.episode_run_time[0];
+    }
     const trailerKey = detail?.videos?.results?.find(v => v.site === "YouTube" && v.type === "Trailer")?.key;
     
     const rawProviders = detail?.["watch/providers"]?.results || {};
@@ -383,7 +420,8 @@ async function enrichMovies(rawMovies: TMDBMovie[]): Promise<Movie[]> {
       }
     }
     const providers = Array.from(providerMap.values());
-    const year = parseInt(raw.release_date?.split("-")[0], 10);
+    const rawDate = raw.release_date || raw.first_air_date;
+    const year = parseInt(rawDate?.split("-")[0] || "", 10);
 
     if (isNaN(year) || year < 1970) continue; // skip very old or invalid
 
@@ -391,11 +429,15 @@ async function enrichMovies(rawMovies: TMDBMovie[]): Promise<Movie[]> {
     const moods = inferMoods(raw.genre_ids, raw.vote_average);
     const occasions = inferOccasions(raw.genre_ids, rating);
     const categories = inferCategories(raw.genre_ids, keywords, raw.vote_average, raw.vote_count);
+    
+    if (mediaType === "tv") {
+      categories.push("tv-series");
+    }
 
     movies.push({
       id: `tmdb-${raw.id}`,
       tmdbId: raw.id,
-      title: raw.title,
+      title: raw.title || raw.name || "Unknown",
       year,
       runtime,
       genres,
@@ -410,6 +452,7 @@ async function enrichMovies(rawMovies: TMDBMovie[]): Promise<Movie[]> {
       trailerKey: trailerKey || null,
       providers: providers || [],
       voteAverage: raw.vote_average,
+      mediaType: mediaType,
     });
   }
 
@@ -443,12 +486,20 @@ export async function fetchTMDBMovies(): Promise<Movie[]> {
     fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "18,36" }),
   ];
 
-  const allBatches = await Promise.all([...popularCalls, ...topRatedCalls, ...genreCalls]);
+  // Step 3: Fetch TV Shows
+  const tvCalls = [
+    fetchDiscoverPage(randomPage(10), { ...popularParams }, "tv"),
+    fetchDiscoverPage(randomPage(10), { ...topRatedParams }, "tv"),
+    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "35,10749" }, "tv"),
+    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "10759,10765" }, "tv"), // Action/Sci-Fi for TV
+  ];
+
+  const allBatches = await Promise.all([...popularCalls, ...topRatedCalls, ...genreCalls, ...tvCalls]);
   const allRaw = allBatches.flat();
 
   const seen = new Map<number, TMDBMovie>();
   for (const m of allRaw) {
-    if (!seen.has(m.id) && m.poster_path && m.release_date && m.title) {
+    if (!seen.has(m.id) && m.poster_path && (m.release_date || m.first_air_date) && (m.title || m.name)) {
       seen.set(m.id, m);
     }
   }
@@ -470,7 +521,7 @@ export async function searchTMDBMovies(query: string): Promise<Movie[]> {
 
   // Filter to movies with posters and release dates for quality
   const filtered = data.results.filter(
-    (m) => m.poster_path && m.release_date && m.title && m.vote_count > 5
+    (m) => m.poster_path && (m.release_date || m.first_air_date) && (m.title || m.name) && m.vote_count > 5
   );
 
   // Enrich the top 10 results with full details
@@ -487,7 +538,7 @@ export async function fetchSimilarMovies(tmdbId: number): Promise<Movie[]> {
 
   // Filter to movies with posters for quality
   const filtered = data.results.filter(
-    (m) => m.poster_path && m.release_date && m.title
+    (m) => m.poster_path && (m.release_date || m.first_air_date) && (m.title || m.name)
   );
 
   // Enrich the top 12 similar movies

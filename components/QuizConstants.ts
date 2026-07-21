@@ -49,6 +49,12 @@ export const ratingOptions: { value: Rating; label: string; sub: string }[] = [
   { value: "R", label: "R", sub: "Under 17 needs an accompanying adult." },
 ];
 
+export const mediaPreferenceOptions: { value: "movies" | "tv" | "both"; label: string }[] = [
+  { value: "movies", label: "Movies only" },
+  { value: "tv", label: "TV Series only" },
+  { value: "both", label: "Both" },
+];
+
 export const categoryOptions: { value: Category | "none"; label: string }[] = [
   { value: "none", label: "I don't have a preference." },
   { value: "true-story", label: "Based on a true story" },
@@ -63,4 +69,7 @@ export const categoryOptions: { value: Category | "none"; label: string }[] = [
   { value: "girl-power", label: "Girl-power movies" },
   { value: "vegas", label: "Set in Las Vegas" },
   { value: "top-250", label: "Widely considered essential viewing" },
+  { value: "sad-ending", label: "Sad endings / Tearjerkers" },
+  { value: "documentary", label: "Documentaries" },
+  { value: "tv-series", label: "TV Series" },
 ];

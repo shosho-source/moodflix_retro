@@ -143,6 +143,12 @@ export function recommend(
       const span = parseInt(answers.recency, 10);
       return new Date().getFullYear() - m.year <= span;
     },
+    (m) => {
+      if (!answers.mediaPreference || answers.mediaPreference === "both") return true;
+      if (answers.mediaPreference === "movies") return m.mediaType === "movie" || !m.mediaType;
+      if (answers.mediaPreference === "tv") return m.mediaType === "tv";
+      return true;
+    },
   ];
 
   for (const filter of hardFilters) {
