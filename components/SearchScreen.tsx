@@ -16,8 +16,6 @@ export default function SearchScreen() {
   const [results, setResults] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-  const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
-  const [similarLoading, setSimilarLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Debounced search
@@ -46,29 +44,15 @@ export default function SearchScreen() {
     };
   }, [query, doSearch]);
 
-  // Select a movie and fetch similar
   async function selectMovie(movie: Movie) {
     setSelectedMovie(movie);
     setStage("detail");
-    setSimilarMovies([]);
-    setSimilarLoading(true);
-
-    if (movie.tmdbId) {
-      try {
-        const res = await fetch(`/api/similar?id=${movie.tmdbId}`);
-        const data = await res.json();
-        setSimilarMovies(data.results ?? []);
-      } catch {
-        setSimilarMovies([]);
-      }
-    }
-    setSimilarLoading(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function backToSearch() {
     setStage("search");
     setSelectedMovie(null);
-    setSimilarMovies([]);
   }
 
   return (
@@ -218,53 +202,8 @@ export default function SearchScreen() {
                   showHeader={false}
                   onRestart={backToSearch}
                   restartLabel="Back to Search"
+                  onSelectSimilar={selectMovie}
                 />
-
-                {/* Similar Movies Section */}
-                <div className="mt-8 pt-6 border-t" >
-                  <h3 className="flex items-center gap-2 font-display text-lg font-bold mb-4" >
-                    <span className="material-symbols-outlined text-[20px]" >movie_filter</span>
-                    Similar Movies
-                  </h3>
-
-                  {similarLoading && (
-                    <div className="flex items-center justify-center py-8">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                        className="w-6 h-6 rounded-full border-[3px] border-[var(--retro-accent)] border-t-transparent"
-                      />
-                    </div>
-                  )}
-
-                  {!similarLoading && similarMovies.length > 0 && (
-                    <div className="similar-carousel">
-                      {similarMovies.map((movie) => (
-                        <button
-                          key={movie.id}
-                          onClick={() => selectMovie(movie)}
-                          className="similar-card"
-                        >
-                          <div className="w-[120px] shrink-0">
-                            <PosterCard movie={movie} />
-                          </div>
-                          <p className="font-display text-xs font-bold mt-2 line-clamp-2 text-center" >
-                            {movie.title}
-                          </p>
-                          <p className="text-[10px] mt-0.5 text-center" >
-                            {movie.year}
-                          </p>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {!similarLoading && similarMovies.length === 0 && (
-                    <p className="text-sm text-center py-6" >
-                      No similar movies found.
-                    </p>
-                  )}
-                </div>
               </div>
             </motion.div>
           )}

@@ -16,14 +16,22 @@ html, body {
   padding: 0;
 }
 
-/* Globally hide scrollbars but keep scrolling functionality */
-* {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
+/* Retro scrollbars */
 *::-webkit-scrollbar {
-  display: none;
+  width: 12px;
+  height: 12px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--retro-surface);
+  border: 1px solid var(--retro-border);
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--retro-accent);
+  border: 1px solid var(--retro-border);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--retro-accent) var(--retro-surface);
 }
 
 body {
