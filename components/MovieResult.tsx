@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Movie } from "@/lib/types";
@@ -55,6 +55,34 @@ export default function MovieResult({
   showHeader = true,
 }: MovieResultProps) {
   const [showTrailer, setShowTrailer] = useState(false);
+  const [expandedBlurb, setExpandedBlurb] = useState(false);
+
+  // Reset expanded state when movie changes
+  useEffect(() => {
+    setExpandedBlurb(false);
+  }, [movie.id]);
+
+  const uniqueProviders = [];
+  if (movie.providers) {
+    const seen = new Set();
+    for (const p of movie.providers) {
+      const name = p.provider_name.toLowerCase();
+      let normalized = name;
+      if (name.includes("amazon") || name.includes("prime")) normalized = "amazon";
+      else if (name.includes("paramount")) normalized = "paramount";
+      else if (name.includes("apple")) normalized = "apple";
+      else if (name.includes("disney")) normalized = "disney";
+      else if (name.includes("hulu")) normalized = "hulu";
+      else if (name.includes("max") || name.includes("hbo")) normalized = "max";
+      else if (name.includes("netflix")) normalized = "netflix";
+      else if (name.includes("peacock")) normalized = "peacock";
+      
+      if (!seen.has(normalized)) {
+        seen.add(normalized);
+        uniqueProviders.push(p);
+      }
+    }
+  }
 
   const getProviderLink = (providerName: string, title: string) => {
     const enc = encodeURIComponent(title);
@@ -65,6 +93,9 @@ export default function MovieResult({
     if (p.includes("apple")) return `https://tv.apple.com/search?term=${enc}`;
     if (p.includes("hulu")) return `https://www.hulu.com/search?q=${enc}`;
     if (p.includes("hbo") || p.includes("max")) return `https://play.max.com/search?q=${enc}`;
+    if (p.includes("paramount")) return `https://www.paramountplus.com/search/?q=${enc}`;
+    if (p.includes("peacock")) return `https://www.peacocktv.com/search?q=${enc}`;
+    if (p.includes("crunchyroll")) return `https://www.crunchyroll.com/search?q=${enc}`;
     return `https://www.justwatch.com/us/search?q=${enc}`;
   };
 
@@ -137,9 +168,17 @@ export default function MovieResult({
               <span>IMDB {movie.voteAverage != null && movie.voteAverage > 0 ? movie.voteAverage.toFixed(1) : "N/A"}</span>
             </p>
             <div className="mt-2 sm:mt-4 leading-relaxed text-left w-full sm:text-left text-center min-h-0 overflow-hidden">
-              <p className="line-clamp-3 sm:line-clamp-5 text-xs sm:text-sm font-medium">
+              <p className={`${expandedBlurb ? '' : 'line-clamp-3 sm:line-clamp-5'} text-xs sm:text-sm font-medium transition-all`}>
                 {movie.blurb}
               </p>
+              {movie.blurb.length > 150 && (
+                <button 
+                  onClick={() => setExpandedBlurb(!expandedBlurb)}
+                  className="text-[10px] sm:text-xs font-mono font-bold mt-1 sm:mt-2 uppercase text-[var(--retro-border)] hover:text-white transition-colors"
+                >
+                  [{expandedBlurb ? "READ_LESS" : "READ_MORE"}]
+                </button>
+              )}
             </div>
 
             <div className="mt-auto w-full brutalist-box p-3 sm:p-4 text-left shrink-0">
@@ -147,9 +186,9 @@ export default function MovieResult({
                 <span className="text-xs">&gt;&gt;</span>
                 STREAMING_SOURCES
               </p>
-              {movie.providers && movie.providers.length > 0 ? (
+              {uniqueProviders.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {movie.providers.map(p => (
+                  {uniqueProviders.map(p => (
                     <a
                       key={p.provider_id}
                       href={getProviderLink(p.provider_name, movie.title)}
