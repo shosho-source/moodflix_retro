@@ -71,5 +71,4 @@ export const categoryOptions: { value: Category | "none"; label: string }[] = [
   { value: "top-250", label: "Widely considered essential viewing" },
   { value: "sad-ending", label: "Sad endings / Tearjerkers" },
   { value: "documentary", label: "Documentaries" },
-  { value: "tv-series", label: "TV Series" },
 ];
