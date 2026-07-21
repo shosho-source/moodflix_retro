@@ -72,7 +72,7 @@ export default function SearchScreen() {
   }
 
   return (
-    <div className="flex-1 flex flex-col" style={{ background: "var(--md-surface-dim)" }}>
+    <div className="flex-1 flex flex-col" >
       <main className="flex-1 w-full max-w-[420px] sm:max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-16 flex flex-col">
 
         <AnimatePresence mode="wait">
@@ -84,17 +84,17 @@ export default function SearchScreen() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.25 }}
             >
-              <div className="rounded-[var(--md-shape-xl)] p-6 sm:p-10 shadow-2xl" style={{ background: "var(--md-surface-container)" }}>
+              <div className="rounded-none p-6 sm:p-10 shadow-2xl" >
                 {/* Header with back link */}
                 <div className="flex items-center gap-3 mb-6">
                   <Link
                     href="/"
                     className="flex items-center justify-center w-10 h-10 rounded-full transition-colors"
-                    style={{ color: "var(--md-on-surface-variant)" }}
+                    
                   >
                     <span className="material-symbols-outlined text-[22px]">arrow_back</span>
                   </Link>
-                  <h1 className="font-display text-2xl sm:text-3xl tracking-tight" style={{ color: "var(--md-on-surface)" }}>
+                  <h1 className="font-display text-2xl sm:text-3xl tracking-tight" >
                     Search Movies
                   </h1>
                 </div>
@@ -126,7 +126,7 @@ export default function SearchScreen() {
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                      className="w-8 h-8 rounded-full border-[3px] border-[var(--md-primary)] border-t-transparent"
+                      className="w-8 h-8 rounded-full border-[3px] border-[var(--retro-accent)] border-t-transparent"
                     />
                   </div>
                 )}
@@ -134,8 +134,8 @@ export default function SearchScreen() {
                 {/* No results */}
                 {!loading && query.trim().length >= 2 && results.length === 0 && (
                   <div className="text-center py-12">
-                    <span className="material-symbols-outlined text-[48px] mb-4 block" style={{ color: "var(--md-outline)" }}>movie_off</span>
-                    <p className="text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
+                    <span className="material-symbols-outlined text-[48px] mb-4 block" >movie_off</span>
+                    <p className="text-sm" >
                       No movies found for &quot;{query}&quot;
                     </p>
                   </div>
@@ -150,8 +150,8 @@ export default function SearchScreen() {
                         onClick={() => selectMovie(movie)}
                         className="search-result-card"
                       >
-                        <md-ripple></md-ripple>
-                        <div className="w-12 h-[72px] rounded-[var(--md-shape-xs)] overflow-hidden shrink-0 bg-[var(--md-surface-container-highest)]">
+                        
+                        <div className="w-12 h-[72px] rounded-none overflow-hidden shrink-0 bg-[#ddd]">
                           {movie.posterPath && (
                             <Image
                               src={movie.posterPath}
@@ -164,25 +164,25 @@ export default function SearchScreen() {
                           )}
                         </div>
                         <div className="flex-1 text-left min-w-0">
-                          <p className="font-display text-[15px] font-bold truncate" style={{ color: "var(--md-on-surface)" }}>
+                          <p className="font-display text-[15px] font-bold truncate" >
                             {movie.title}
                           </p>
-                          <p className="text-xs mt-0.5" style={{ color: "var(--md-on-surface-variant)" }}>
+                          <p className="text-xs mt-0.5" >
                             {movie.year} · {movie.genres.slice(0, 3).join(", ")}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             {movie.voteAverage != null && movie.voteAverage > 0 && (
-                              <span className="flex items-center gap-0.5 text-xs font-medium" style={{ color: "var(--md-primary)" }}>
+                              <span className="flex items-center gap-0.5 text-xs font-medium" >
                                 <span className="material-symbols-outlined text-[12px]">star</span>
                                 {movie.voteAverage.toFixed(1)}
                               </span>
                             )}
-                            <span className="text-xs" style={{ color: "var(--md-outline)" }}>
+                            <span className="text-xs" >
                               {movie.runtime} min
                             </span>
                           </div>
                         </div>
-                        <span className="material-symbols-outlined text-[20px] shrink-0" style={{ color: "var(--md-outline)" }}>
+                        <span className="material-symbols-outlined text-[20px] shrink-0" >
                           chevron_right
                         </span>
                       </button>
@@ -193,8 +193,8 @@ export default function SearchScreen() {
                 {/* Empty state hint */}
                 {!loading && query.trim().length < 2 && results.length === 0 && (
                   <div className="text-center py-12">
-                    <span className="material-symbols-outlined text-[48px] mb-4 block" style={{ color: "var(--md-outline-variant)" }}>theaters</span>
-                    <p className="text-sm" style={{ color: "var(--md-on-surface-variant)" }}>
+                    <span className="material-symbols-outlined text-[48px] mb-4 block" >theaters</span>
+                    <p className="text-sm" >
                       Search for any movie to see details and find similar films.
                     </p>
                   </div>
@@ -211,7 +211,7 @@ export default function SearchScreen() {
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.25 }}
             >
-              <div className="rounded-[var(--md-shape-xl)] p-6 sm:p-10 shadow-2xl" style={{ background: "var(--md-surface-container)" }}>
+              <div className="rounded-none p-6 sm:p-10 shadow-2xl" >
                 <MovieResult
                   movie={selectedMovie}
                   showHeader={false}
@@ -220,9 +220,9 @@ export default function SearchScreen() {
                 />
 
                 {/* Similar Movies Section */}
-                <div className="mt-8 pt-6 border-t" style={{ borderColor: "var(--md-outline-variant)" }}>
-                  <h3 className="flex items-center gap-2 font-display text-lg font-bold mb-4" style={{ color: "var(--md-on-surface)" }}>
-                    <span className="material-symbols-outlined text-[20px]" style={{ color: "var(--md-primary)" }}>movie_filter</span>
+                <div className="mt-8 pt-6 border-t" >
+                  <h3 className="flex items-center gap-2 font-display text-lg font-bold mb-4" >
+                    <span className="material-symbols-outlined text-[20px]" >movie_filter</span>
                     Similar Movies
                   </h3>
 
@@ -231,7 +231,7 @@ export default function SearchScreen() {
                       <motion.div
                         animate={{ rotate: 360 }}
                         transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                        className="w-6 h-6 rounded-full border-[3px] border-[var(--md-primary)] border-t-transparent"
+                        className="w-6 h-6 rounded-full border-[3px] border-[var(--retro-accent)] border-t-transparent"
                       />
                     </div>
                   )}
@@ -247,10 +247,10 @@ export default function SearchScreen() {
                           <div className="w-[120px] shrink-0">
                             <PosterCard movie={movie} />
                           </div>
-                          <p className="font-display text-xs font-bold mt-2 line-clamp-2 text-center" style={{ color: "var(--md-on-surface)" }}>
+                          <p className="font-display text-xs font-bold mt-2 line-clamp-2 text-center" >
                             {movie.title}
                           </p>
-                          <p className="text-[10px] mt-0.5 text-center" style={{ color: "var(--md-on-surface-variant)" }}>
+                          <p className="text-[10px] mt-0.5 text-center" >
                             {movie.year}
                           </p>
                         </button>
@@ -259,7 +259,7 @@ export default function SearchScreen() {
                   )}
 
                   {!similarLoading && similarMovies.length === 0 && (
-                    <p className="text-sm text-center py-6" style={{ color: "var(--md-on-surface-variant)" }}>
+                    <p className="text-sm text-center py-6" >
                       No similar movies found.
                     </p>
                   )}

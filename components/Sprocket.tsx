@@ -15,7 +15,7 @@ export default function Sprocket({ total, current }: SprocketProps) {
           </div>
         ))}
       </div>
-      <p className="mt-2 text-xs tracking-wide" style={{ color: "var(--md-on-surface-variant)" }}>
+      <p className="mt-2 text-xs tracking-wide" >
         FRAME {current + 1} / {total}
       </p>
     </div>

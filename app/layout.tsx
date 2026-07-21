@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "material-symbols/outlined.css";
 import "./globals.css";
-import MaterialRegistry from "@/components/MaterialRegistry";
 
 export const metadata: Metadata = {
   title: "MoodFlix — A movie, picked for you",
@@ -22,7 +21,6 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-full flex flex-col">
-        <MaterialRegistry />
         {children}
       </body>
     </html>

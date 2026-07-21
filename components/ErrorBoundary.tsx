@@ -28,16 +28,10 @@ export default class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <h2
-            className="font-display text-3xl mb-4"
-            style={{ color: "var(--md-on-surface)" }}
-          >
+          <h2 className="font-display text-3xl font-bold uppercase mb-4">
             Something went wrong
           </h2>
-          <p
-            className="mb-8 text-sm max-w-xs"
-            style={{ color: "var(--md-on-surface-variant)" }}
-          >
+          <p className="mb-8 text-sm font-mono max-w-xs">
             An unexpected error occurred. Please try reloading the page.
           </p>
           <button
@@ -45,11 +39,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
               this.setState({ hasError: false });
               window.location.reload();
             }}
-            className="relative overflow-hidden font-display uppercase tracking-wide text-sm px-7 py-3 rounded-full"
-            style={{
-              background: "var(--md-primary)",
-              color: "var(--md-on-primary)",
-            }}
+            className="brutalist-button primary py-3 px-8 text-sm"
           >
             Reload
           </button>

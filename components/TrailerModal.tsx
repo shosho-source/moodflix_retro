@@ -24,11 +24,11 @@ export default function TrailerModal({ trailerKey, onClose }: TrailerModalProps)
       className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300"
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
-      <div className="relative w-full max-w-5xl aspect-video bg-black rounded-[var(--md-shape-xl)] overflow-hidden shadow-2xl ring-1 ring-white/10">
+      <div className="relative w-full max-w-5xl aspect-video bg-black rounded-none overflow-hidden shadow-2xl ring-1 ring-white/10">
         <div className="absolute top-4 right-4 z-10 bg-black/40 hover:bg-black/80 rounded-full backdrop-blur-md transition-colors text-white">
-          <md-icon-button onClick={handleClose}>
-            <md-icon>close</md-icon>
-          </md-icon-button>
+          <button onClick={handleClose} className="w-10 h-10 flex items-center justify-center brutalist-button rounded-full">
+            <span className="material-symbols-outlined">close</span>
+          </button>
         </div>
         <iframe
           src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}

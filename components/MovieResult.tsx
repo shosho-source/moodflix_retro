@@ -125,13 +125,12 @@ export default function MovieResult({
               <span className="w-1 h-1 bg-[var(--retro-border)]"></span>
               <span>IMDB {movie.voteAverage != null && movie.voteAverage > 0 ? movie.voteAverage.toFixed(1) : "N/A"}</span>
             </p>
-            <div className="mt-2 sm:mt-4 leading-relaxed text-left w-full sm:text-left text-center" style={{ color: "var(--md-on-surface)" }}>
+            <div className="mt-2 sm:mt-4 leading-relaxed text-left w-full sm:text-left text-center">
               <p className={!expandedSynopsis ? "line-clamp-1 sm:line-clamp-none text-sm sm:text-base font-medium" : "text-sm sm:text-base font-medium"}>
                 {movie.blurb}
               </p>
               <button 
-                className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider sm:hidden mt-2" 
-                style={{ color: "var(--md-primary)" }}
+                className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider sm:hidden mt-2 text-[var(--retro-accent)]" 
                 onClick={() => setExpandedSynopsis(!expandedSynopsis)}
               >
                 {expandedSynopsis ? "Show less" : "Read more"}
