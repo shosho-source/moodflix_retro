@@ -35,6 +35,13 @@ export default function IntroScreen({ movieCount, genreCount, onStartQuiz }: Int
           <span>Start Assessment</span>
           <span className="ml-4">&gt;&gt;&gt;</span>
         </button>
+
+        <Link
+          href="/search"
+          className="brutalist-button py-4 px-8 text-center text-lg flex items-center justify-center w-full sm:w-auto"
+        >
+          Manual Override (Search)
+        </Link>
       </div>
 
       <div className="mt-auto border-t-2 border-[var(--retro-border)] pt-4 sm:pt-6 animate-in fade-in duration-1000 delay-500 shrink-0">
