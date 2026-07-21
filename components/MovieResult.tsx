@@ -77,7 +77,7 @@ export default function MovieResult({
           <div className="absolute inset-0 bg-black/80 backdrop-blur-[8px]" />
         </motion.div>
       )}
-      <div className="flex flex-col animate-in slide-in-from-bottom-8 fade-in duration-700">
+      <div className="flex flex-col h-full overflow-hidden animate-in slide-in-from-bottom-8 fade-in duration-700">
         {showHeader && (
           <div className="flex items-center justify-between mb-4 sm:mb-6 shrink-0 w-full border-b-2 border-[var(--retro-border)] pb-4">
             <div className="flex items-center gap-2 font-mono text-xs sm:text-sm uppercase tracking-wider font-bold">
@@ -95,11 +95,11 @@ export default function MovieResult({
           </div>
         )}
         
-        <div className="flex-1 pb-4 sm:pb-6 flex flex-col items-center sm:flex-row gap-4 sm:gap-8 w-full">
-          <div className="w-56 mx-auto sm:w-64 sm:mx-0 shrink-0 drop-shadow-lg">
+        <div className="flex-1 min-h-0 pb-4 sm:pb-6 flex flex-col items-center sm:flex-row gap-4 sm:gap-8 w-full overflow-hidden">
+          <div className="w-32 sm:w-48 shrink-0 drop-shadow-lg mx-auto sm:mx-0">
             <PosterCard movie={movie} />
           </div>
-          <div className="flex-1 flex flex-col items-center text-center sm:items-start sm:text-left w-full mt-2 sm:mt-0">
+          <div className="flex-1 flex flex-col items-center text-center sm:items-start sm:text-left w-full mt-2 sm:mt-0 min-h-0 overflow-hidden">
             <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-4">
               {movie.genres.map((g) => (
                 <span
@@ -125,20 +125,13 @@ export default function MovieResult({
               <span className="w-1 h-1 bg-[var(--retro-border)]"></span>
               <span>IMDB {movie.voteAverage != null && movie.voteAverage > 0 ? movie.voteAverage.toFixed(1) : "N/A"}</span>
             </p>
-            <div className="mt-2 sm:mt-4 leading-relaxed text-left w-full sm:text-left text-center">
-              <p className={!expandedSynopsis ? "line-clamp-1 sm:line-clamp-none text-sm sm:text-base font-medium" : "text-sm sm:text-base font-medium"}>
+            <div className="mt-2 sm:mt-4 leading-relaxed text-left w-full sm:text-left text-center min-h-0 overflow-hidden">
+              <p className="line-clamp-3 sm:line-clamp-5 text-xs sm:text-sm font-medium">
                 {movie.blurb}
               </p>
-              <button 
-                className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider sm:hidden mt-2 text-[var(--retro-accent)]" 
-                onClick={() => setExpandedSynopsis(!expandedSynopsis)}
-              >
-                {expandedSynopsis ? "Show less" : "Read more"}
-                <span className="material-symbols-outlined text-[14px]">{expandedSynopsis ? "expand_less" : "chevron_right"}</span>
-              </button>
             </div>
 
-            <div className="mt-5 w-full brutalist-box p-4 text-left">
+            <div className="mt-auto w-full brutalist-box p-3 sm:p-4 text-left shrink-0">
               <p className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.1em] mb-3">
                 <span className="text-xs">&gt;&gt;</span>
                 STREAMING_SOURCES

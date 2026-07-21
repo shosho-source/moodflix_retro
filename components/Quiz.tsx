@@ -129,12 +129,12 @@ export default function Quiz() {
   }
 
   return (
-    <div className="brutalist-box brutalist-shadow p-6 sm:p-10 w-full relative">
-      <div className="absolute top-0 left-0 w-full border-b-2 border-[var(--retro-border)] p-1 text-xs font-mono font-bold flex justify-between bg-[var(--retro-fg)] text-[var(--retro-surface)] z-10">
+    <div className="brutalist-box brutalist-shadow p-4 sm:p-6 w-full h-full max-h-full relative flex flex-col overflow-hidden">
+      <div className="absolute top-0 left-0 w-full border-b-2 border-[var(--retro-border)] p-1 text-xs font-mono font-bold flex justify-between bg-[var(--retro-fg)] text-[var(--retro-surface)] z-10 shrink-0">
         <span>sys.run_quiz</span>
         <span>[{stage.toUpperCase()}]</span>
       </div>
-      <div className="pt-6">
+      <div className="pt-6 flex-1 overflow-hidden flex flex-col relative">
       {stage === "intro" && (
         <IntroScreen
           movieCount={moviePool.length}

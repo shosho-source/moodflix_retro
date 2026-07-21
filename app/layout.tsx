@@ -27,10 +27,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full antialiased ${spaceMono.variable} ${inter.variable}`}>
+    <html lang="en" className={`antialiased ${spaceMono.variable} ${inter.variable}`}>
       <head>
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="flex flex-col">
         {children}
       </body>
     </html>

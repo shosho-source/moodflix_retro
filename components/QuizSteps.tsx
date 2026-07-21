@@ -79,11 +79,12 @@ export default function QuizSteps({
   }
 
   return (
-    <div>
-      <div className="mb-7">
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="mb-5 sm:mb-7 shrink-0">
         <Sprocket total={steps.length} current={stepIndex} />
       </div>
 
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-2 -mr-2">
       <AnimatePresence mode="wait">
         <motion.div
           key={stepKey}
@@ -205,10 +206,11 @@ export default function QuizSteps({
               ))}
             </Step>
           )}
-        </motion.div>
-      </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-      <div className="flex items-center justify-between mt-8 border-t-2 border-[var(--retro-border)] pt-6">
+      <div className="flex items-center justify-between mt-4 pt-4 sm:pt-6 border-t-2 border-[var(--retro-border)] shrink-0 bg-[var(--retro-surface)] z-10">
         <button
           onClick={onBack}
           className="brutalist-button py-3 px-6 text-sm"

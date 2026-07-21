@@ -10,23 +10,24 @@ interface IntroScreenProps {
 
 export default function IntroScreen({ movieCount, genreCount, onStartQuiz }: IntroScreenProps) {
   return (
-    <div className="text-left pt-8 sm:pt-0 font-mono">
-      <div className="mb-8 border-b-2 border-[var(--retro-border)] pb-2 flex justify-between">
+    <div className="text-left pt-8 sm:pt-0 font-mono h-full flex flex-col min-h-0 overflow-hidden">
+      <div className="mb-4 sm:mb-8 border-b-2 border-[var(--retro-border)] pb-2 flex justify-between shrink-0">
         <span className="font-bold uppercase">Moodflix_OS v1.0</span>
         <span>{new Date().getFullYear()}</span>
       </div>
 
-      <h1 className="font-display font-bold uppercase text-5xl sm:text-7xl mb-4 tracking-tighter leading-none animate-in fade-in duration-700">
-        Evolve<br/>
-        the way<br/>
-        you watch
-      </h1>
-      
-      <p className="text-sm max-w-md mb-10 animate-in fade-in duration-700 delay-150 uppercase">
-        [INITIALIZATION] — Answer diagnostic questions to calculate the perfect cinematic output for your exact parameters. Zero buffering. 100% accuracy.
-      </p>
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+        <h1 className="font-display font-bold uppercase text-5xl sm:text-7xl mb-4 tracking-tighter leading-none animate-in fade-in duration-700">
+          Evolve<br/>
+          the way<br/>
+          you watch
+        </h1>
+        
+        <p className="text-sm max-w-md mb-8 sm:mb-10 animate-in fade-in duration-700 delay-150 uppercase">
+          [INITIALIZATION] — Answer diagnostic questions to calculate the perfect cinematic output for your exact parameters. Zero buffering. 100% accuracy.
+        </p>
 
-      <div className="flex flex-col sm:flex-row items-stretch gap-4 animate-in fade-in duration-700 delay-300">
+        <div className="flex flex-col sm:flex-row items-stretch gap-4 animate-in fade-in duration-700 delay-300">
         <button
           onClick={onStartQuiz}
           className="brutalist-button primary py-4 px-8 flex justify-between items-center text-lg w-full sm:w-auto"
@@ -59,9 +60,10 @@ export default function IntroScreen({ movieCount, genreCount, onStartQuiz }: Int
           </div>
         </div>
         
-        <div className="flex justify-between items-center text-[10px] uppercase tracking-widest">
-          <span>{`///`} SYSTEM_READY</span>
-          <span>{`[DATA_STREAM_ACTIVE]`}</span>
+          <div className="flex justify-between items-center text-[10px] uppercase tracking-widest">
+            <span>{`///`} SYSTEM_READY</span>
+            <span>{`[DATA_STREAM_ACTIVE]`}</span>
+          </div>
         </div>
       </div>
     </div>
