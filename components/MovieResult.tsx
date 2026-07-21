@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Movie } from "@/lib/types";
@@ -27,8 +27,8 @@ interface MovieResultProps {
   nextLabel?: string;
   /** Whether to show the result header ("Tonight's pick"). Set false for search results. */
   showHeader?: boolean;
-  /** Called when a similar movie is selected. */
-  onSelectSimilar?: (movie: Movie) => void;
+  /** Whether to show the result header ("Tonight's pick"). Set false for search results. */
+  showHeader?: boolean;
 }
 
 function MatchBadge({ score, max }: { score: number; max: number }) {
@@ -55,19 +55,8 @@ export default function MovieResult({
   restartLabel = "Retake Quiz",
   nextLabel,
   showHeader = true,
-  onSelectSimilar,
 }: MovieResultProps) {
   const [showTrailer, setShowTrailer] = useState(false);
-  const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
-
-  useEffect(() => {
-    if (movie.tmdbId) {
-      fetch(`/api/similar?id=${movie.tmdbId}`)
-        .then(r => r.json())
-        .then(d => setSimilarMovies(d.results || []))
-        .catch(console.error);
-    }
-  }, [movie.tmdbId]);
 
   const getProviderLink = (providerName: string, title: string) => {
     const enc = encodeURIComponent(title);
@@ -189,30 +178,6 @@ export default function MovieResult({
             </div>
           </div>
         </div>
-
-        {similarMovies.length > 0 && (
-          <div className="mt-8 shrink-0 w-full pt-4 border-t-2 border-[var(--retro-border)]">
-            <p className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.1em] mb-4">
-              <span className="text-xs">&gt;&gt;</span>
-              SIMILAR_TITLES
-            </p>
-            <div className="flex gap-4 overflow-x-auto pb-4 snap-x w-full" style={{ scrollbarWidth: 'none' }}>
-              {similarMovies.map(sm => (
-                <div 
-                  key={sm.id} 
-                  className="w-24 sm:w-32 shrink-0 snap-start cursor-pointer hover:scale-[1.02] transition-transform"
-                  onClick={() => {
-                    onSelectSimilar?.(sm);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                >
-                  <PosterCard movie={sm} />
-                  <p className="text-[10px] sm:text-xs font-mono mt-2 truncate font-bold uppercase" title={sm.title}>{sm.title}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-start gap-4 shrink-0 pt-6 mt-4 sm:mt-auto border-t-2 border-[var(--retro-border)] relative z-10 w-full bg-[var(--retro-surface)] sm:bg-transparent -mx-6 px-6 sm:mx-0 sm:px-0">
           {movie.trailerKey && (

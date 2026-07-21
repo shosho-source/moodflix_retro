@@ -528,20 +528,3 @@ export async function searchTMDBMovies(query: string): Promise<Movie[]> {
   const top = filtered.slice(0, 10);
   return enrichMovies(top);
 }
-
-// ─── Fetch similar movies ────────────────────────────────────────
-export async function fetchSimilarMovies(tmdbId: number): Promise<Movie[]> {
-  const data = await tmdbFetch<TMDBDiscoverResponse>(`/movie/${tmdbId}/similar`, {
-    language: "en-US",
-    page: "1",
-  });
-
-  // Filter to movies with posters for quality
-  const filtered = data.results.filter(
-    (m) => m.poster_path && (m.release_date || m.first_air_date) && (m.title || m.name)
-  );
-
-  // Enrich the top 12 similar movies
-  const top = filtered.slice(0, 12);
-  return enrichMovies(top);
-}
