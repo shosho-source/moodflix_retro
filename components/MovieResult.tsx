@@ -27,8 +27,6 @@ interface MovieResultProps {
   nextLabel?: string;
   /** Whether to show the result header ("Tonight's pick"). Set false for search results. */
   showHeader?: boolean;
-  /** Whether to show the result header ("Tonight's pick"). Set false for search results. */
-  showHeader?: boolean;
 }
 
 function MatchBadge({ score, max }: { score: number; max: number }) {
