@@ -179,10 +179,10 @@ export default function MovieResult({
               <span>IMDB {movie.voteAverage != null && movie.voteAverage > 0 ? movie.voteAverage.toFixed(1) : "N/A"}</span>
             </p>
             <div className="mt-2 sm:mt-4 leading-relaxed text-left w-full sm:text-left text-center">
-              <p className={`${expandedBlurb ? '' : 'line-clamp-3 sm:line-clamp-5'} text-xs sm:text-sm font-medium transition-all`}>
+              <p className={`${expandedBlurb ? '' : 'line-clamp-3'} text-xs sm:text-sm font-medium transition-all`}>
                 {movie.blurb}
               </p>
-              {movie.blurb.length > 150 && (
+              {movie.blurb.length > 220 && (
                 <button 
                   onClick={() => setExpandedBlurbId(expandedBlurb ? null : movie.id)}
                   className="text-[10px] sm:text-xs font-mono font-bold mt-1 sm:mt-2 uppercase text-[var(--retro-border)] hover:text-white transition-colors"
