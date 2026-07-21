@@ -55,7 +55,7 @@ export default function MovieResult({
   showHeader = true,
 }: MovieResultProps) {
   const [showTrailer, setShowTrailer] = useState(false);
-  const [expandedBlurbId, setExpandedBlurbId] = useState<number | null>(null);
+  const [expandedBlurbId, setExpandedBlurbId] = useState<string | null>(null);
   const expandedBlurb = expandedBlurbId === movie.id;
 
   const uniqueProviders = [];
