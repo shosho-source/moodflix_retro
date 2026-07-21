@@ -227,33 +227,7 @@ export default function MovieResult({
           </div>
         </div>
 
-        {similarMovies.length > 0 && (
-          <div className="mt-8 shrink-0 w-full pt-4 border-t-2 border-[var(--retro-border)]">
-            <p className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.1em] mb-4">
-              <span className="text-xs">&gt;&gt;</span>
-              SIMILAR_TITLES
-            </p>
-            <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-4 snap-x w-full">
-              {similarMovies.map(sm => (
-                <div 
-                  key={sm.id} 
-                  className="w-24 sm:w-32 shrink-0 snap-start cursor-pointer hover:scale-[1.02] transition-transform"
-                  onClick={() => {
-                    onSelectSimilar?.(sm);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                >
-                  <PosterCard movie={sm} />
-                  <p className="text-[10px] sm:text-xs font-mono mt-2 truncate font-bold uppercase" title={sm.title}>{sm.title}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        </div>
-
-
-        <div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-start gap-4 shrink-0 pt-4 mt-2 sm:mt-4 border-t-2 border-[var(--retro-border)] relative z-10 w-full bg-[var(--retro-surface)] sm:bg-transparent">
+        <div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-start gap-4 shrink-0 pt-6 mt-6 sm:mt-8 border-t-2 border-[var(--retro-border)] relative z-10 w-full">
           {movie.trailerKey && (
             <button
               onClick={() => setShowTrailer(true)}
@@ -282,6 +256,31 @@ export default function MovieResult({
               <span className="hidden sm:inline">{nextLabel || "NEXT_RECORD >>"}</span>
             </button>
           )}
+        </div>
+
+        {similarMovies.length > 0 && (
+          <div className="mt-8 shrink-0 w-full pt-4 border-t-2 border-[var(--retro-border)]">
+            <p className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.1em] mb-4">
+              <span className="text-xs">&gt;&gt;</span>
+              SIMILAR_TITLES
+            </p>
+            <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-4 snap-x w-full">
+              {similarMovies.map(sm => (
+                <div 
+                  key={sm.id} 
+                  className="w-24 sm:w-32 shrink-0 snap-start cursor-pointer hover:scale-[1.02] transition-transform"
+                  onClick={() => {
+                    onSelectSimilar?.(sm);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                >
+                  <PosterCard movie={sm} />
+                  <p className="text-[10px] sm:text-xs font-mono mt-2 truncate font-bold uppercase" title={sm.title}>{sm.title}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         </div>
       </div>
 
