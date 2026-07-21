@@ -10,7 +10,7 @@ import IntroScreen from "./IntroScreen";
 import QuizSteps from "./QuizSteps";
 import MovieResult from "./MovieResult";
 
-type Stage = "intro" | "quiz" | "result" | "empty" | "loading" | "splash";
+type Stage = "intro" | "quiz" | "result" | "empty" | "loading" | "splash" | "error";
 
 export default function Quiz() {
   const [stage, setStage] = useState<Stage>("splash");
@@ -42,20 +42,17 @@ export default function Quiz() {
         const [data] = await Promise.all([fetchPromise, minTimerPromise]);
 
         if (!cancelled) {
-          setMoviePool(data.movies ?? []);
+          if (!data.movies || data.movies.length === 0) {
+            throw new Error("No movies returned");
+          }
+          setMoviePool(data.movies);
           setMovieSource(data.source ?? "unknown");
           setStage("intro");
         }
-      } catch {
-        // If API is unreachable, import the bundled fallback directly
+      } catch (e) {
         if (!cancelled) {
-          try {
-            const { movies: fallback } = await import("@/lib/movies");
-            setMoviePool(fallback);
-          } catch {
-            // Even the fallback import failed — leave pool empty
-          }
-          setStage("intro");
+          console.error("Failed to load movies:", e);
+          setStage("error");
         }
       }
     }
@@ -188,6 +185,21 @@ export default function Quiz() {
             className="brutalist-button w-full py-4 text-lg"
           >
             Retake quiz
+          </button>
+        </div>
+      )}
+
+      {stage === "error" && (
+        <div className="text-center py-20 text-[var(--retro-error)] bg-red-900/20 p-4 border-2 border-red-500">
+          <h2 className="font-display font-bold text-3xl mb-4 uppercase">SYSTEM_FAILURE</h2>
+          <p className="mb-8 font-mono text-sm text-red-200">
+            Unable to connect to the TMDB API. Please ensure your API key is configured correctly in .env.local (or on Vercel) and that TMDB is reachable.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="brutalist-button w-full py-4 text-lg border-red-500 text-red-500 hover:bg-red-500 hover:text-black"
+          >
+            REBOOT_SYSTEM
           </button>
         </div>
       )}
