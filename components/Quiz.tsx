@@ -129,10 +129,12 @@ export default function Quiz() {
   }
 
   return (
-    <div
-      className="rounded-[var(--md-shape-xl)] p-6 sm:p-10 shadow-2xl"
-      style={{ background: "var(--md-surface-container)" }}
-    >
+    <div className="brutalist-box brutalist-shadow p-6 sm:p-10 w-full relative">
+      <div className="absolute top-0 left-0 w-full border-b-2 border-[var(--retro-border)] p-1 text-xs font-mono font-bold flex justify-between bg-[var(--retro-fg)] text-[var(--retro-surface)] z-10">
+        <span>sys.run_quiz</span>
+        <span>[{stage.toUpperCase()}]</span>
+      </div>
+      <div className="pt-6">
       {stage === "intro" && (
         <IntroScreen
           movieCount={moviePool.length}
@@ -172,16 +174,14 @@ export default function Quiz() {
 
       {stage === "empty" && (
         <div className="text-center py-20">
-          <h2 className="font-display text-3xl mb-4" style={{ color: "var(--md-on-surface)" }}>No exact matches</h2>
-          <p className="mb-8" style={{ color: "var(--md-on-surface-variant)" }}>
+          <h2 className="font-display font-bold text-3xl mb-4 uppercase">No exact matches</h2>
+          <p className="mb-8 font-mono text-sm">
             Try broadening your answers or selecting different genres.
           </p>
           <button
             onClick={restart}
-            className="relative overflow-hidden font-display uppercase tracking-wide text-sm px-7 py-3 rounded-full"
-            style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
+            className="brutalist-button w-full py-4 text-lg"
           >
-            <md-ripple></md-ripple>
             Retake quiz
           </button>
         </div>
@@ -190,6 +190,7 @@ export default function Quiz() {
       <AnimatePresence>
         {stage === "splash" && <SplashScreen visible={true} />}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

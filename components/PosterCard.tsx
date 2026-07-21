@@ -7,14 +7,13 @@ export default function PosterCard({ movie }: { movie: Movie }) {
 
   return (
     <div
-      className="relative aspect-[2/3] w-full rounded-[var(--md-shape-lg)] overflow-hidden shrink-0"
+      className="relative aspect-[2/3] w-full border-2 border-[var(--retro-border)] overflow-hidden shrink-0 brutalist-shadow"
       style={{
         background: hasPoster
           ? `hsl(${hue} 20% 8%)`
           : `linear-gradient(160deg, hsl(${hue} 45% 22%) 0%, hsl(${hue} 55% 10%) 60%, hsl(${(hue + 30) % 360} 40% 8%) 100%)`,
       }}
     >
-      <md-elevation></md-elevation>
       {hasPoster ? (
         <Image
           src={movie.posterPath!}

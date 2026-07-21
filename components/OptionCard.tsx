@@ -20,33 +20,23 @@ export default function OptionCard({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={[
-        "relative overflow-hidden w-full text-left rounded-[var(--md-shape-md)] border px-4 py-3.5",
-        "flex items-center gap-3 transition-colors duration-150 focus-visible:outline",
-        "focus-visible:outline-2 focus-visible:outline-offset-2",
+      className={`relative w-full text-left border-2 p-4 flex items-start gap-4 transition-colors duration-100 ${
         selected
-          ? "border-[var(--md-sys-color-primary)]"
-          : "border-[var(--md-sys-color-outline-variant)] hover:border-[var(--md-sys-color-outline)]",
-      ].join(" ")}
-      style={{
-        background: selected
-          ? "var(--md-sys-color-secondary-container)"
-          : "var(--md-sys-color-surface-container-low)",
-        color: selected ? "var(--md-sys-color-on-secondary-container)" : "var(--md-sys-color-on-surface)",
-      }}
+          ? "border-[var(--retro-border)] bg-[var(--retro-fg)] text-[var(--retro-surface)]"
+          : "border-[var(--retro-border)] bg-[var(--retro-surface)] hover:bg-[#e0e0dc]"
+      }`}
     >
-      <md-ripple></md-ripple>
-      <div className="shrink-0 flex items-center justify-center pointer-events-none">
-        {multi ? (
-          <md-checkbox checked={selected} tabIndex={-1} />
-        ) : (
-          <md-radio checked={selected} tabIndex={-1} />
-        )}
+      <div className="shrink-0 flex items-center justify-center mt-1 pointer-events-none">
+        <div className={`w-5 h-5 flex items-center justify-center border-2 border-[currentcolor] ${multi ? '' : 'rounded-full'}`}>
+          {selected && (
+            <div className={`w-2.5 h-2.5 bg-[currentcolor] ${multi ? '' : 'rounded-full'}`} />
+          )}
+        </div>
       </div>
       <span className="flex flex-col relative z-10">
-        <span className="text-[15px] font-medium leading-snug">{label}</span>
+        <span className="text-base font-bold uppercase tracking-wide leading-snug">{label}</span>
         {sublabel && (
-          <span className="text-[13px] opacity-75 leading-snug mt-0.5">{sublabel}</span>
+          <span className="text-sm font-mono mt-1 opacity-80">{sublabel}</span>
         )}
       </span>
     </button>

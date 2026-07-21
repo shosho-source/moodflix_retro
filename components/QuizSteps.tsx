@@ -38,9 +38,9 @@ function Step({
 }) {
   return (
     <div>
-      <h2 className="font-display text-2xl sm:text-3xl mb-1.5" style={{ color: "var(--md-on-surface)" }}>{title}</h2>
+      <h2 className="font-display text-xl sm:text-2xl mb-1.5 uppercase font-bold">{title}</h2>
       {hint && (
-        <p className="text-sm mb-5" style={{ color: "var(--md-on-surface-variant)" }}>
+        <p className="text-sm mb-5 font-mono">
           {hint}
         </p>
       )}
@@ -208,23 +208,19 @@ export default function QuizSteps({
         </motion.div>
       </AnimatePresence>
 
-      <div className="flex items-center justify-between mt-8">
+      <div className="flex items-center justify-between mt-8 border-t-2 border-[var(--retro-border)] pt-6">
         <button
           onClick={onBack}
-          className="relative overflow-hidden text-sm font-medium px-5 py-2.5 rounded-full"
-          style={{ color: "var(--md-on-surface-variant)" }}
+          className="brutalist-button py-3 px-6 text-sm"
         >
-          <md-ripple></md-ripple>
-          Back
+          &lt;&lt;&lt; Back
         </button>
         <button
           onClick={onNext}
           disabled={!canAdvance}
-          className="relative overflow-hidden font-display uppercase tracking-wide text-sm px-7 py-3 rounded-full disabled:opacity-40 disabled:pointer-events-none"
-          style={{ background: "var(--md-primary)", color: "var(--md-on-primary)" }}
+          className="brutalist-button primary py-3 px-8 text-sm disabled:opacity-30 disabled:pointer-events-none"
         >
-          <md-ripple></md-ripple>
-          {stepIndex === steps.length - 1 ? "Check results" : "Next"}
+          {stepIndex === steps.length - 1 ? "Check results" : "Next"} &gt;&gt;&gt;
         </button>
       </div>
     </div>
