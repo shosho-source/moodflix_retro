@@ -44,7 +44,7 @@ export default function IntroScreen({ movieCount, genreCount, onStartQuiz }: Int
         </Link>
       </div>
 
-      <div className="mt-auto border-t-2 border-[var(--retro-border)] pt-4 sm:pt-6 animate-in fade-in duration-1000 delay-500 shrink-0">
+      <div className="mt-auto pt-4 sm:pt-6 animate-in fade-in duration-1000 delay-500 shrink-0">
         <div className="grid grid-cols-3 gap-2 sm:gap-4 text-left mb-4 sm:mb-8">
           <div className="border-l-2 border-[var(--retro-border)] pl-3">
             <p className="text-[10px] uppercase tracking-widest mb-1">Index Size</p>
