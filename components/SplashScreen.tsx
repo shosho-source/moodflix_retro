@@ -48,10 +48,10 @@ export default function SplashScreen({ visible }: SplashScreenProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="h-1 w-56 bg-[var(--retro-border)] rounded-full overflow-hidden"
+        className="h-2 w-56 bg-transparent border-2 border-[var(--retro-border)] overflow-hidden"
       >
         <motion.div 
-          className="h-full bg-[var(--retro-accent)]"
+          className="h-full bg-[var(--retro-fg)]"
           initial={{ width: "0%" }}
           animate={{ width: "100%" }}
           transition={{ duration: 10, ease: "linear" }}

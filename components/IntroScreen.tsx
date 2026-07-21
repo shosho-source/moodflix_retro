@@ -45,22 +45,22 @@ export default function IntroScreen({ movieCount, genreCount, onStartQuiz }: Int
       </div>
 
       <div className="mt-auto pt-4 sm:pt-6 animate-in fade-in duration-1000 delay-500 shrink-0">
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 text-left mb-4 sm:mb-8">
-          <div className="border-l-2 border-[var(--retro-border)] pl-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center mb-4 sm:mb-8">
+          <div className="flex flex-col items-center">
             <p className="text-[10px] uppercase tracking-widest mb-1">Index Size</p>
             <p className="font-display font-bold text-xl">{movieCount > 0 ? movieCount : "..."}</p>
           </div>
-          <div className="border-l-2 border-[var(--retro-border)] pl-3">
+          <div className="flex flex-col items-center">
             <p className="text-[10px] uppercase tracking-widest mb-1">Parameters</p>
             <p className="font-display font-bold text-xl">{genreCount > 0 ? genreCount : "..."}</p>
           </div>
-          <div className="border-l-2 border-[var(--retro-border)] pl-3">
+          <div className="flex flex-col items-center">
             <p className="text-[10px] uppercase tracking-widest mb-1">Source</p>
             <p className="font-display font-bold text-xl">TMDB API</p>
           </div>
         </div>
         
-          <div className="flex justify-between items-center text-[10px] uppercase tracking-widest">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-6 text-[10px] uppercase tracking-widest text-center">
             <span>{`///`} SYSTEM_READY</span>
             <span>{`[DATA_STREAM_ACTIVE]`}</span>
           </div>
