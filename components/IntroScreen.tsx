@@ -56,7 +56,7 @@ export default function IntroScreen({ movieCount, genreCount, onStartQuiz }: Int
           </div>
           <div className="flex flex-col items-center">
             <p className="text-[10px] uppercase tracking-widest mb-1">Source</p>
-            <p className="font-display font-bold text-xl">TMDB API</p>
+            <p className="font-display font-bold text-xl">TMDB</p>
           </div>
         </div>
         
