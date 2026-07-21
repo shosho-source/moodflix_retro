@@ -37,7 +37,7 @@ export default function Quiz() {
     async function load() {
       try {
         const fetchPromise = fetch("/api/movies").then(res => res.json());
-        const minTimerPromise = new Promise(resolve => setTimeout(resolve, 2500));
+        const minTimerPromise = new Promise(resolve => setTimeout(resolve, 4000));
         
         const [data] = await Promise.all([fetchPromise, minTimerPromise]);
 

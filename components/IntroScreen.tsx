@@ -12,7 +12,7 @@ export default function IntroScreen({ movieCount, genreCount, onStartQuiz }: Int
   return (
     <div className="text-left pt-8 sm:pt-0 font-mono h-full flex flex-col min-h-0 overflow-hidden">
       <div className="mb-4 sm:mb-8 border-b-2 border-[var(--retro-border)] pb-2 flex justify-between shrink-0">
-        <span className="font-bold uppercase">Moodflix_OS v1.0</span>
+        <span className="font-bold uppercase">Moodflix_OS v1.1</span>
         <span>{new Date().getFullYear()}</span>
       </div>
 
