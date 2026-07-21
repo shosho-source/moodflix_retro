@@ -16,14 +16,14 @@ export default function IntroScreen({ movieCount, genreCount, onStartQuiz }: Int
         <span>{new Date().getFullYear()}</span>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-        <h1 className="font-display font-bold uppercase text-5xl sm:text-7xl mb-4 tracking-tighter leading-none animate-in fade-in duration-700">
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        <h1 className="font-display font-bold uppercase text-4xl sm:text-7xl mb-2 sm:mb-4 tracking-tighter leading-none animate-in fade-in duration-700">
           Evolve<br/>
           the way<br/>
           you watch
         </h1>
         
-        <p className="text-sm max-w-md mb-8 sm:mb-10 animate-in fade-in duration-700 delay-150 uppercase">
+        <p className="text-xs sm:text-sm max-w-md mb-4 sm:mb-10 animate-in fade-in duration-700 delay-150 uppercase">
           [INITIALIZATION] — Answer diagnostic questions to calculate the perfect cinematic output for your exact parameters. Zero buffering. 100% accuracy.
         </p>
 
@@ -44,8 +44,8 @@ export default function IntroScreen({ movieCount, genreCount, onStartQuiz }: Int
         </Link>
       </div>
 
-      <div className="mt-16 sm:mt-24 border-t-2 border-[var(--retro-border)] pt-6 animate-in fade-in duration-1000 delay-500">
-        <div className="grid grid-cols-3 gap-4 text-left mb-8">
+      <div className="mt-auto border-t-2 border-[var(--retro-border)] pt-4 sm:pt-6 animate-in fade-in duration-1000 delay-500 shrink-0">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 text-left mb-4 sm:mb-8">
           <div className="border-l-2 border-[var(--retro-border)] pl-3">
             <p className="text-[10px] uppercase tracking-widest mb-1">Index Size</p>
             <p className="font-display font-bold text-xl">{movieCount > 0 ? movieCount : "..."}</p>
