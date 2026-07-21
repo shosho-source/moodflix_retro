@@ -504,6 +504,201 @@ export async function fetchTMDBMovies(): Promise<Movie[]> {
     }
   }
 
+    categories.add("heist");
+  }
+  if (kwNames.has("car race") || kwNames.has("car racing") || kwNames.has("formula one") || kwNames.has("nascar") || kwNames.has("auto racing") || kwNames.has("racing")) {
+    categories.add("racing");
+  }
+  if (kwNames.has("las vegas") || kwNames.has("casino") || kwNames.has("gambling")) {
+    categories.add("vegas");
+  }
+  if (kwNames.has("female protagonist") || kwNames.has("feminism") || kwNames.has("strong woman") || kwNames.has("women's rights")) {
+    categories.add("girl-power");
+  }
+  if (kwNames.has("tragedy") || kwNames.has("tearjerker") || kwNames.has("melancholy") || kwNames.has("sad ending")) {
+    categories.add("sad-ending");
+  }
+
+  // Genre-based inference
+  if (genreIds.includes(36)) categories.add("true-story"); // History genre
+  if (genreIds.includes(878)) categories.add("space");     // Sci-Fi heuristic
+  if (genreIds.includes(99)) categories.add("documentary"); // Documentary genre
+
+  // Top-250 heuristic: high rating + many votes
+  if (voteAvg >= 7.5 && voteCount >= 2000) {
+    categories.add("top-250");
+  }
+
+  // Perspective-shift: highly rated dramas
+  if (voteAvg >= 7.8 && genreIds.includes(18)) {
+    categories.add("perspective-shift");
+  }
+  
+  // Sad-ending: highly rated romance + drama, or high-rated tragedies
+  if (voteAvg >= 7.5 && genreIds.includes(10749) && genreIds.includes(18)) {
+    categories.add("sad-ending");
+  }
+
+  return [...categories];
+}
+
+function mapGenres(genreIds: number[]): string[] {
+  const genres: string[] = [];
+  for (const gid of genreIds) {
+    const name = TMDB_GENRE_MAP[gid];
+    if (name && !genres.includes(name)) {
+      genres.push(name);
+    }
+  }
+  return genres.length > 0 ? genres : ["Drama"]; // fallback
+}
+
+// ─── Color hue from genre (for gradient poster fallback) ─────────
+function hueFromGenres(genreIds: number[]): number {
+  const genreHues: Record<number, number> = {
+    28: 8, 12: 25, 16: 48, 35: 45, 80: 0, 18: 220,
+    10751: 130, 14: 280, 36: 40, 27: 330, 10749: 340,
+    878: 200, 53: 15, 10752: 100, 37: 30,
+  };
+  for (const gid of genreIds) {
+    if (genreHues[gid] !== undefined) return genreHues[gid];
+  }
+  return 210;
+}
+
+// ─── Shared: enrich a batch of TMDBMovie[] into Movie[] ──────────
+async function enrichMovies(rawMovies: TMDBMovie[]): Promise<Movie[]> {
+  // Fetch details for each movie (runtime + certification + keywords)
+  // Batch in groups to respect rate limits (~40 req/10s)
+  const BATCH_SIZE = 40;
+  const details = new Map<number, TMDBMovieDetail>();
+
+  for (let i = 0; i < rawMovies.length; i += BATCH_SIZE) {
+    const batch = rawMovies.slice(i, i + BATCH_SIZE);
+    const batchResults = await Promise.all(
+      batch.map((m) => fetchMovieDetail(m.id, m.media_type || "movie").catch(() => null))
+    );
+    for (const detail of batchResults) {
+      if (detail) details.set(detail.id, detail);
+    }
+    // Small delay between batches to be nice to TMDB
+    if (i + BATCH_SIZE < rawMovies.length) {
+      await new Promise((r) => setTimeout(r, 300));
+    }
+  }
+
+  const movies: Movie[] = [];
+
+  for (const raw of rawMovies) {
+    const detail = details.get(raw.id);
+    const mediaType = raw.media_type || "movie";
+    const rating = detail ? getUSCertification(detail, mediaType) : (raw.adult ? "R" : "PG-13");
+    const keywords = detail?.keywords?.keywords || detail?.keywords?.results || [];
+    
+    // For TV, use episode_run_time if available
+    let runtime = detail?.runtime ?? 120;
+    if (mediaType === "tv" && detail?.episode_run_time && detail.episode_run_time.length > 0) {
+      runtime = detail.episode_run_time[0];
+    }
+    const trailerKey = detail?.videos?.results?.find(v => v.site === "YouTube" && v.type === "Trailer")?.key;
+    
+    const rawProviders = detail?.["watch/providers"]?.results || {};
+    const targetRegions = ["US", "IN", "GB", "DE", "FR", "IT", "ES"]; // US, India, and major European regions
+    const providerMap = new Map<number, { provider_id: number; provider_name: string; logo_path: string }>();
+    
+    for (const region of targetRegions) {
+      const regionProviders = rawProviders[region]?.flatrate || [];
+      for (const p of regionProviders) {
+        if (!providerMap.has(p.provider_id)) {
+          providerMap.set(p.provider_id, p);
+        }
+      }
+    }
+    const providers = Array.from(providerMap.values());
+    const rawDate = raw.release_date || raw.first_air_date;
+    const year = parseInt(rawDate?.split("-")[0] || "", 10);
+
+    if (isNaN(year) || year < 1970) continue; // skip very old or invalid
+
+    const genres = mapGenres(raw.genre_ids);
+    const moods = inferMoods(raw.genre_ids, raw.vote_average);
+    const occasions = inferOccasions(raw.genre_ids, rating);
+    const categories = inferCategories(raw.genre_ids, keywords, raw.vote_average, raw.vote_count);
+    
+    if (mediaType === "tv") {
+      categories.push("tv-series");
+    }
+
+    movies.push({
+      id: `tmdb-${raw.id}`,
+      tmdbId: raw.id,
+      title: raw.title || raw.name || "Unknown",
+      year,
+      runtime,
+      genres,
+      moods,
+      occasions,
+      rating,
+      categories,
+      blurb: raw.overview || "A must-watch film.",
+      hue: hueFromGenres(raw.genre_ids),
+      posterPath: raw.poster_path ? `https://image.tmdb.org/t/p/w500${raw.poster_path}` : null,
+      backdropPath: raw.backdrop_path ? `https://image.tmdb.org/t/p/w1280${raw.backdrop_path}` : null,
+      trailerKey: trailerKey || null,
+      providers: providers || [],
+      voteAverage: raw.vote_average,
+      mediaType: mediaType,
+    });
+  }
+
+  return movies;
+}
+
+// ─── Main entry: fetch & build full movie list ───────────────────
+// Caching is now handled at the route level via ISR (revalidate = 3600)
+export async function fetchTMDBMovies(): Promise<Movie[]> {
+  const randomPage = (max: number) => Math.floor(Math.random() * max) + 1;
+
+  // Step 1: Fetch popular + top-rated movies (broad coverage, randomized pages)
+  const popularParams = { sort_by: "popularity.desc", "vote_count.gte": "500" };
+  const topRatedParams = { sort_by: "vote_average.desc", "vote_count.gte": "1000" };
+
+  const popularCalls = Array.from({ length: 12 }, () =>
+    fetchDiscoverPage(randomPage(40), popularParams)
+  );
+  const topRatedCalls = Array.from({ length: 12 }, () =>
+    fetchDiscoverPage(randomPage(40), topRatedParams)
+  );
+
+  // Step 2: Fetch genre-specific movies for better coverage
+  const genreParams = { sort_by: "vote_average.desc", "vote_count.gte": "200" };
+  const genreCalls = [
+    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "35,10749" }),
+    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "878" }),
+    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "28" }),
+    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "16,10751" }),
+    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "53,80" }),
+    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "18,36" }),
+  ];
+
+  // Step 3: Fetch TV Shows
+  const tvCalls = [
+    fetchDiscoverPage(randomPage(10), { ...popularParams }, "tv"),
+    fetchDiscoverPage(randomPage(10), { ...topRatedParams }, "tv"),
+    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "35,10749" }, "tv"),
+    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "10759,10765" }, "tv"), // Action/Sci-Fi for TV
+  ];
+
+  const allBatches = await Promise.all([...popularCalls, ...topRatedCalls, ...genreCalls, ...tvCalls]);
+  const allRaw = allBatches.flat();
+
+  const seen = new Map<number, TMDBMovie>();
+  for (const m of allRaw) {
+    if (!seen.has(m.id) && m.poster_path && (m.release_date || m.first_air_date) && (m.title || m.name)) {
+      seen.set(m.id, m);
+    }
+  }
+
   const uniqueMovies = [...seen.values()];
   return enrichMovies(uniqueMovies);
 }
@@ -527,4 +722,26 @@ export async function searchTMDBMovies(query: string): Promise<Movie[]> {
   // Enrich the top 10 results with full details
   const top = filtered.slice(0, 10);
   return enrichMovies(top);
+}
+
+// ─── Fetch similar movies ────────────────────────────────────────
+export async function fetchSimilarMovies(tmdbId: number, mediaType: "movie" | "tv" = "movie"): Promise<Movie[]> {
+  try {
+    const data = await tmdbFetch<TMDBDiscoverResponse>(`/${mediaType}/${tmdbId}/similar`, {
+      language: "en-US",
+      page: "1",
+    });
+
+    // Filter to movies with posters for quality
+    const filtered = data.results.filter(
+      (m) => m.poster_path && (m.release_date || m.first_air_date) && (m.title || m.name)
+    ).map(m => ({ ...m, media_type: mediaType }));
+
+    // Enrich the top 12 similar movies
+    const top = filtered.slice(0, 12);
+    return enrichMovies(top);
+  } catch (error) {
+    console.error("Error fetching similar movies:", error);
+    return [];
+  }
 }

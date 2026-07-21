@@ -17,6 +17,7 @@ export default function Quiz() {
   const [answers, setAnswers] = useState<QuizAnswers>(emptyAnswers);
   const [stepIndex, setStepIndex] = useState(0);
   const [resultIndex, setResultIndex] = useState(0);
+  const [overrideMovie, setOverrideMovie] = useState<Movie | null>(null);
   const [allGenres, setAllGenres] = useState(false);
   const [sessionSeed] = useState(() => Date.now());
 
@@ -115,6 +116,7 @@ export default function Quiz() {
     setAnswers(emptyAnswers);
     setStepIndex(0);
     setResultIndex(0);
+    setOverrideMovie(null);
     setStage("intro");
   }
 
@@ -158,15 +160,17 @@ export default function Quiz() {
         />
       )}
 
-      {stage === "result" && current && (
+      {stage === "result" && (overrideMovie || current) && (
         <MovieResult
-          movie={current}
-          score={currentScore}
-          maxScore={currentMaxScore}
-          resultIndex={resultIndex}
-          totalMatches={totalMatches}
-          onNext={nextRecommendation}
+          movie={overrideMovie || current!}
+          score={overrideMovie ? undefined : currentScore}
+          maxScore={overrideMovie ? undefined : currentMaxScore}
+          resultIndex={overrideMovie ? undefined : resultIndex}
+          totalMatches={overrideMovie ? undefined : totalMatches}
+          onNext={overrideMovie ? () => setOverrideMovie(null) : nextRecommendation}
+          nextLabel={overrideMovie ? "<< Back to Results" : undefined}
           onRestart={restart}
+          onSelectSimilar={setOverrideMovie}
         />
       )}
 
