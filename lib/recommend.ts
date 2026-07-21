@@ -132,6 +132,7 @@ export function recommend(
   // Hard filters with graceful fallback:
   // If a filter would empty the pool, skip it
   const hardFilters: Array<(m: Movie) => boolean> = [
+    (m) => (answers.category === "queer" ? m.categories.includes("queer") : true),
     (m) => (answers.mood ? m.moods.includes(answers.mood) : true),
     (m) => (answers.occasion ? m.occasions.includes(answers.occasion) : true),
     (m) =>
