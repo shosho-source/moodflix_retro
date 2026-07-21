@@ -62,7 +62,6 @@ export default function MovieResult({
   const expandedBlurb = expandedBlurbId === movie.id;
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
   const [showProviders, setShowProviders] = useState(false);
-  const [isAtTop, setIsAtTop] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -70,10 +69,6 @@ export default function MovieResult({
       scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [movie.id]);
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    setIsAtTop(e.currentTarget.scrollTop < 20);
-  };
 
   useEffect(() => {
     if (movie.tmdbId) {
@@ -146,7 +141,6 @@ export default function MovieResult({
         <div 
           ref={scrollRef} 
           className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 sm:pr-2"
-          onScroll={handleScroll}
         >
         {showHeader && (
           <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4 sm:mb-6 shrink-0 w-full border-b-2 border-[var(--retro-border)] pb-4">
@@ -185,7 +179,7 @@ export default function MovieResult({
                 {movie.rating}
               </span>
             </div>
-            <h2 className="font-display uppercase text-3xl sm:text-4xl mb-1 sm:mb-2 font-bold leading-none tracking-tighter">
+            <h2 className="font-display uppercase text-2xl sm:text-4xl mb-1 sm:mb-2 font-bold leading-none tracking-tighter">
               {movie.title}{" "}
             </h2>
             <p className="flex items-center justify-center sm:justify-start gap-3 text-xs sm:text-sm mb-1 font-mono uppercase tracking-widest font-bold">
@@ -262,20 +256,12 @@ export default function MovieResult({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-start gap-4 shrink-0 pt-4 pb-4 mt-6 sm:mt-8 border-t-2 border-[var(--retro-border)] sticky bottom-0 bg-[var(--retro-surface)] z-30 w-full relative">
+        <div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-start gap-4 shrink-0 pt-3 pb-3 sm:pt-4 sm:pb-4 mt-4 sm:mt-8 border-t-2 border-[var(--retro-border)] sticky bottom-0 bg-[var(--retro-surface)] z-30 w-full relative">
           
-          <div 
-            className={`absolute -top-7 left-1/2 -translate-x-1/2 sm:hidden transition-opacity duration-300 pointer-events-none ${isAtTop ? 'opacity-100' : 'opacity-0'}`}
-          >
-            <div className="bg-[var(--retro-surface)] px-3 py-1 border-2 border-b-0 border-[var(--retro-border)] font-mono text-[10px] font-bold tracking-widest animate-bounce">
-              v SCROLL v
-            </div>
-          </div>
-
           {movie.trailerKey && (
             <button
               onClick={() => setShowTrailer(true)}
-              className="brutalist-button py-3 px-2 sm:px-6 text-sm"
+              className="brutalist-button py-2 sm:py-3 px-2 sm:px-6 text-xs sm:text-sm"
             >
               <span className="sm:hidden">[TRAILER]</span>
               <span className="hidden sm:inline">[PLAY_TRAILER]</span>
@@ -284,7 +270,7 @@ export default function MovieResult({
           {onRestart && (
             <button
               onClick={onRestart}
-              className={`brutalist-button py-3 px-6 text-sm ${!movie.trailerKey ? 'col-span-2' : ''}`}
+              className={`brutalist-button py-2 sm:py-3 px-6 text-xs sm:text-sm ${!movie.trailerKey ? 'col-span-2' : ''}`}
             >
               {restartLabel}
             </button>
@@ -293,10 +279,9 @@ export default function MovieResult({
             <button
               onClick={() => {
                 setShowTrailer(false);
-                setIsAtTop(true);
                 onNext();
               }}
-              className="col-span-2 sm:col-auto brutalist-button primary py-3 px-8 text-sm sm:text-base flex-1"
+              className="col-span-2 sm:col-auto brutalist-button primary py-2 sm:py-3 px-8 text-sm sm:text-base flex-1"
             >
               <span className="sm:hidden">{nextLabel || "NEXT_RECORD >>"}</span>
               <span className="hidden sm:inline">{nextLabel || "NEXT_RECORD >>"}</span>
