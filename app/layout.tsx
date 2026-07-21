@@ -1,7 +1,20 @@
+import { Space_Mono, Inter } from "next/font/google";
 import type { Metadata } from "next";
 import "material-symbols/outlined.css";
 import "./globals.css";
 
+const spaceMono = Space_Mono({
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  variable: "--font-space-mono",
+});
+
+const inter = Inter({
+  weight: ["400", "600", "800"],
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
 export const metadata: Metadata = {
   title: "MoodFlix — A movie, picked for you",
   description:
@@ -14,11 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className={`h-full antialiased ${spaceMono.variable} ${inter.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
       </head>
       <body className="min-h-full flex flex-col">
         {children}

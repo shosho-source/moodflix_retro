@@ -33,6 +33,7 @@ interface MovieResultProps {
 function MatchBadge({ score, max }: { score: number; max: number }) {
   const pct = max > 0 ? Math.round((score / max) * 100) : 0;
 
+  return (
     <span
       className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 border-2 border-[var(--retro-border)] whitespace-nowrap bg-[var(--retro-fg)] text-[var(--retro-surface)] uppercase font-mono"
     >
