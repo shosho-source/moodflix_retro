@@ -69,7 +69,6 @@ export default function MovieResult({
     if (scrollRef.current) {
       scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    setIsAtTop(true);
   }, [movie.id]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -294,6 +293,7 @@ export default function MovieResult({
             <button
               onClick={() => {
                 setShowTrailer(false);
+                setIsAtTop(true);
                 onNext();
               }}
               className="col-span-2 sm:col-auto brutalist-button primary py-3 px-8 text-sm sm:text-base flex-1"
