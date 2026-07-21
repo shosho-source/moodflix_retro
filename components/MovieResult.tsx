@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { Movie } from "@/lib/types";
 import PosterCard from "./PosterCard";
 import TrailerModal from "./TrailerModal";
-import { genreIcons } from "./QuizConstants";
 
 interface MovieResultProps {
   movie: Movie;
@@ -181,7 +180,7 @@ export default function MovieResult({
               onClick={onRestart}
               className={`brutalist-button py-3 px-6 text-sm ${!movie.trailerKey ? 'col-span-2' : ''}`}
             >
-              [RESTART_SEQ]
+              {restartLabel}
             </button>
           )}
           {onNext && (
