@@ -55,7 +55,6 @@ export default function MovieResult({
   showHeader = true,
 }: MovieResultProps) {
   const [showTrailer, setShowTrailer] = useState(false);
-  const [expandedSynopsis, setExpandedSynopsis] = useState(false);
 
   const hasMatchBadge = score !== undefined && maxScore !== undefined;
   const hasNavigation = resultIndex !== undefined && totalMatches !== undefined;
@@ -180,7 +179,6 @@ export default function MovieResult({
             <button
               onClick={() => {
                 setShowTrailer(false);
-                setExpandedSynopsis(false);
                 onNext();
               }}
               className="col-span-2 sm:col-auto brutalist-button primary py-3 px-8 text-sm sm:text-base flex-1"
