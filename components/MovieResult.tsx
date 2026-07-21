@@ -62,13 +62,19 @@ export default function MovieResult({
   const expandedBlurb = expandedBlurbId === movie.id;
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
   const [showProviders, setShowProviders] = useState(false);
+  const [isAtTop, setIsAtTop] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
     }
+    setIsAtTop(true);
   }, [movie.id]);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setIsAtTop(e.currentTarget.scrollTop < 20);
+  };
 
   useEffect(() => {
     if (movie.tmdbId) {
@@ -138,7 +144,11 @@ export default function MovieResult({
         </motion.div>
       )}
       <div className="flex flex-col animate-in slide-in-from-bottom-8 fade-in duration-700 w-full h-full">
-        <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 sm:pr-2">
+        <div 
+          ref={scrollRef} 
+          className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 sm:pr-2"
+          onScroll={handleScroll}
+        >
         {showHeader && (
           <div className="flex flex-wrap items-center justify-between gap-y-3 mb-4 sm:mb-6 shrink-0 w-full border-b-2 border-[var(--retro-border)] pb-4">
             <div className="flex items-center gap-2 font-mono text-xs sm:text-sm uppercase tracking-wider font-bold">
@@ -253,7 +263,16 @@ export default function MovieResult({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-start gap-4 shrink-0 pt-4 pb-4 mt-6 sm:mt-8 border-t-2 border-[var(--retro-border)] sticky bottom-0 bg-[var(--retro-surface)] z-30 w-full">
+        <div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-start gap-4 shrink-0 pt-4 pb-4 mt-6 sm:mt-8 border-t-2 border-[var(--retro-border)] sticky bottom-0 bg-[var(--retro-surface)] z-30 w-full relative">
+          
+          <div 
+            className={`absolute -top-7 left-1/2 -translate-x-1/2 sm:hidden transition-opacity duration-300 pointer-events-none ${isAtTop ? 'opacity-100' : 'opacity-0'}`}
+          >
+            <div className="bg-[var(--retro-surface)] px-3 py-1 border-2 border-b-0 border-[var(--retro-border)] font-mono text-[10px] font-bold tracking-widest animate-bounce">
+              v SCROLL v
+            </div>
+          </div>
+
           {movie.trailerKey && (
             <button
               onClick={() => setShowTrailer(true)}

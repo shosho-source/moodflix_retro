@@ -82,14 +82,23 @@ body {
   transition: all 0.1s ease;
 }
 
-.brutalist-button:hover {
-  background: var(--retro-fg);
-  color: var(--retro-surface);
+@media (hover: hover) {
+  .brutalist-button:hover {
+    background: var(--retro-fg);
+    color: var(--retro-surface);
+  }
+
+  .brutalist-button.primary:hover {
+    background: var(--retro-surface);
+    color: var(--retro-accent);
+  }
 }
 
 .brutalist-button:active {
   transform: translate(2px, 2px);
   box-shadow: none;
+  background: var(--retro-fg);
+  color: var(--retro-surface);
 }
 
 .brutalist-button.primary {
@@ -97,7 +106,7 @@ body {
   color: var(--retro-accent-fg);
 }
 
-.brutalist-button.primary:hover {
+.brutalist-button.primary:active {
   background: var(--retro-surface);
   color: var(--retro-accent);
 }

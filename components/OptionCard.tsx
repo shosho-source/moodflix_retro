@@ -23,7 +23,7 @@ export default function OptionCard({
       className={`relative w-full text-left border-2 p-4 flex items-start gap-4 transition-colors duration-100 ${
         selected
           ? "border-[var(--retro-border)] bg-[var(--retro-fg)] text-[var(--retro-surface)]"
-          : "border-[var(--retro-border)] bg-[var(--retro-surface)] hover:bg-[#e0e0dc]"
+          : "border-[var(--retro-border)] bg-[var(--retro-surface)] active:bg-[#e0e0dc] sm:hover:bg-[#e0e0dc]"
       }`}
     >
       <div className="shrink-0 flex items-center justify-center mt-1 pointer-events-none">
