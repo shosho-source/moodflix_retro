@@ -21,7 +21,9 @@ export type Category =
   | "top-250"
   | "sad-ending"
   | "documentary"
-  | "tv-series";
+  | "tv-series"
+  | "coming-of-age"
+  | "queer";
 
 export interface Movie {
   id: string;
