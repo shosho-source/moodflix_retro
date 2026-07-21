@@ -532,7 +532,7 @@ export async function searchTMDBMovies(query: string): Promise<Movie[]> {
 // ─── Fetch similar movies ────────────────────────────────────────
 export async function fetchSimilarMovies(tmdbId: number, mediaType: "movie" | "tv" = "movie"): Promise<Movie[]> {
   try {
-    const data = await tmdbFetch<TMDBDiscoverResponse>(`/${mediaType}/${tmdbId}/similar`, {
+    const data = await tmdbFetch<TMDBDiscoverResponse>(`/${mediaType}/${tmdbId}/recommendations`, {
       language: "en-US",
       page: "1",
     });

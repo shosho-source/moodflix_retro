@@ -233,7 +233,7 @@ export default function MovieResult({
               <span className="text-xs">&gt;&gt;</span>
               SIMILAR_TITLES
             </p>
-            <div className="flex gap-4 overflow-x-auto pb-4 snap-x w-full">
+            <div className="flex gap-4 overflow-x-auto overflow-y-hidden pb-4 snap-x w-full">
               {similarMovies.map(sm => (
                 <div 
                   key={sm.id} 
