@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Movie } from "@/lib/types";
@@ -55,12 +55,8 @@ export default function MovieResult({
   showHeader = true,
 }: MovieResultProps) {
   const [showTrailer, setShowTrailer] = useState(false);
-  const [expandedBlurb, setExpandedBlurb] = useState(false);
-
-  // Reset expanded state when movie changes
-  useEffect(() => {
-    setExpandedBlurb(false);
-  }, [movie.id]);
+  const [expandedBlurbId, setExpandedBlurbId] = useState<number | null>(null);
+  const expandedBlurb = expandedBlurbId === movie.id;
 
   const uniqueProviders = [];
   if (movie.providers) {
@@ -173,7 +169,7 @@ export default function MovieResult({
               </p>
               {movie.blurb.length > 150 && (
                 <button 
-                  onClick={() => setExpandedBlurb(!expandedBlurb)}
+                  onClick={() => setExpandedBlurbId(expandedBlurb ? null : movie.id)}
                   className="text-[10px] sm:text-xs font-mono font-bold mt-1 sm:mt-2 uppercase text-[var(--retro-border)] hover:text-white transition-colors"
                 >
                   [{expandedBlurb ? "READ_LESS" : "READ_MORE"}]
