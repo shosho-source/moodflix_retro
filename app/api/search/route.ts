@@ -24,7 +24,7 @@ async function enrichAndSaveFromTMDB(tmdbMovie: any) {
 
     const vibeString = `Title: ${detail.title}. Year: ${releaseYear}. Genres: ${genres.join(', ')}. Director: ${director}. Overview: ${detail.overview}`;
     
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
     const embedResult = await model.embedContent(vibeString);
     
     await supabase.from('movies').upsert({
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Use Gemini to generate a vector for the prompt
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
     const embedResult = await model.embedContent(prompt);
     const queryVector = embedResult.embedding.values;
 
