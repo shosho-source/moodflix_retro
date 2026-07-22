@@ -132,7 +132,11 @@ export function recommend(
   // Hard filters with graceful fallback:
   // If a filter would empty the pool, skip it
   const hardFilters: Array<(m: Movie) => boolean> = [
-    (m) => (answers.category === "queer" ? m.categories.includes("queer") : true),
+    (m) => (answers.category && answers.category !== "none" ? m.categories.includes(answers.category as Category) : true),
+    (m) => (answers.genres && answers.genres.length > 0 ? answers.genres.some(g => {
+        if (g === "Romantic Comedy") return m.genres.includes("Romance") && m.genres.includes("Comedy");
+        return m.genres.includes(g);
+    }) : true),
     (m) => (answers.mood ? m.moods.includes(answers.mood) : true),
     (m) => (answers.occasion ? m.occasions.includes(answers.occasion) : true),
     (m) =>
@@ -153,8 +157,7 @@ export function recommend(
   ];
 
   for (const filter of hardFilters) {
-    const narrowed = pool.filter(filter);
-    if (narrowed.length > 0) pool = narrowed;
+    pool = pool.filter(filter);
   }
 
   // Score remaining movies

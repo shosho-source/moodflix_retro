@@ -536,7 +536,7 @@ export async function fetchTMDBMovies(): Promise<Movie[]> {
   const topHits = qualityMovies.slice(0, 40);
   const theRest = qualityMovies.slice(40).sort(() => 0.5 - Math.random());
   
-  const preFiltered = [...topHits, ...theRest.slice(0, 110)];
+  const preFiltered = [...topHits, ...theRest.slice(0, 360)];
   
   console.log(`Pre-filter reduced movie pool from ${initialCount} to ${preFiltered.length} for detail enrichment.`);
 
@@ -577,8 +577,8 @@ export async function fetchSimilarMovies(tmdbId: number, mediaType: "movie" | "t
       (m) => m.poster_path && (m.release_date || m.first_air_date) && (m.title || m.name)
     ).map(m => ({ ...m, media_type: mediaType }));
 
-    // Enrich the top 12 similar movies
-    const top = filtered.slice(0, 12);
+    // Enrich the top 24 similar movies
+    const top = filtered.slice(0, 24);
     return enrichMovies(top);
   } catch (error) {
     console.error("Error fetching similar movies:", error);

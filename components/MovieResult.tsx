@@ -195,6 +195,15 @@ export default function MovieResult({
               >
                 {movie.rating}
               </span>
+              {movie.categories?.includes("queer") && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-xs font-mono font-bold px-2 py-1 border border-[var(--retro-border)] uppercase"
+                  style={{ background: 'linear-gradient(90deg, #FF0018, #FFA52C, #FFFF41, #008018, #0000F9, #86007D)', color: 'white', borderColor: 'transparent' }}
+                  title="Queer Cinema"
+                >
+                  🏳️‍🌈 QUEER
+                </span>
+              )}
             </div>
             <h2 className="font-display uppercase text-2xl sm:text-4xl mb-1 sm:mb-2 font-bold leading-none tracking-tighter">
               {movie.title}{" "}
