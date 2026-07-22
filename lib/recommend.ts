@@ -129,16 +129,39 @@ export function recommend(
 
   if (pool.length === 0) return [];
 
-  // Hard filters with graceful fallback:
-  // If a filter would empty the pool, skip it
-  const hardFilters: Array<(m: Movie) => boolean> = [
-    (m) => (answers.category && answers.category !== "none" ? m.categories.includes(answers.category as Category) : true),
-    (m) => (answers.genres && answers.genres.length > 0 ? answers.genres.some(g => {
-        if (g === "Romantic Comedy") return m.genres.includes("Romance") && m.genres.includes("Comedy");
-        return m.genres.includes(g);
-    }) : true),
-    (m) => (answers.mood ? m.moods.includes(answers.mood) : true),
-    (m) => (answers.occasion ? m.occasions.includes(answers.occasion) : true),
+  // 1. NON-NEGOTIABLE STRICT FILTERS (Category, Genre, Media Preference)
+  // These MUST always be obeyed. Non-matching items will NEVER be returned.
+  const strictFilters: Array<(m: Movie) => boolean> = [
+    (m) =>
+      answers.category && answers.category !== "none"
+        ? m.categories.includes(answers.category as Category)
+        : true,
+    (m) =>
+      answers.genres && answers.genres.length > 0
+        ? answers.genres.some((g) => {
+            if (g === "Romantic Comedy")
+              return m.genres.includes("Romance") && m.genres.includes("Comedy");
+            return m.genres.includes(g);
+          })
+        : true,
+    (m) => {
+      if (!answers.mediaPreference || answers.mediaPreference === "both") return true;
+      if (answers.mediaPreference === "movies") return m.mediaType === "movie" || !m.mediaType;
+      if (answers.mediaPreference === "tv") return m.mediaType === "tv";
+      return true;
+    },
+  ];
+
+  for (const filter of strictFilters) {
+    pool = pool.filter(filter);
+  }
+
+  if (pool.length === 0) return [];
+
+  // 2. SOFT / ADAPTIVE FILTERS (Rating, Recency, Occasion, Mood)
+  // If applying a soft filter leaves at least MIN_POOL_SIZE candidate movies, we apply it.
+  // Otherwise we let scoreMovie rank the exact matches at the top while keeping a rich result set.
+  const softFilters: Array<(m: Movie) => boolean> = [
     (m) =>
       answers.ratingsMatter && answers.ratings.length > 0
         ? ratingOrder[m.rating] <= Math.max(...answers.ratings.map((r) => ratingOrder[r]))
@@ -148,16 +171,16 @@ export function recommend(
       const span = parseInt(answers.recency, 10);
       return new Date().getFullYear() - m.year <= span;
     },
-    (m) => {
-      if (!answers.mediaPreference || answers.mediaPreference === "both") return true;
-      if (answers.mediaPreference === "movies") return m.mediaType === "movie" || !m.mediaType;
-      if (answers.mediaPreference === "tv") return m.mediaType === "tv";
-      return true;
-    },
+    (m) => (answers.occasion ? m.occasions.includes(answers.occasion) : true),
+    (m) => (answers.mood ? m.moods.includes(answers.mood) : true),
   ];
 
-  for (const filter of hardFilters) {
-    pool = pool.filter(filter);
+  const MIN_POOL_SIZE = 5;
+  for (const filter of softFilters) {
+    const narrowed = pool.filter(filter);
+    if (narrowed.length >= MIN_POOL_SIZE) {
+      pool = narrowed;
+    }
   }
 
   // Score remaining movies
