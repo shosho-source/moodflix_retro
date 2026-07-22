@@ -575,18 +575,83 @@ export async function searchTMDBMovies(query: string): Promise<Movie[]> {
 // ─── Fetch similar movies ────────────────────────────────────────
 export async function fetchSimilarMovies(tmdbId: number, mediaType: "movie" | "tv" = "movie"): Promise<Movie[]> {
   try {
-    const data = await tmdbFetch<TMDBDiscoverResponse>(`/${mediaType}/${tmdbId}/similar`, {
+    const detail = await tmdbFetch<any>(`/${mediaType}/${tmdbId}`, {
+      append_to_response: "similar,recommendations,credits",
       language: "en-US",
-      page: "1",
     });
 
-    // Filter to movies with posters for quality
-    const filtered = data.results.filter(
-      (m) => m.poster_path && (m.release_date || m.first_air_date) && (m.title || m.name)
-    ).map(m => ({ ...m, media_type: mediaType }));
+    const candidateScores = new Map<number, { movie: any, score: number }>();
+
+    function addCandidate(m: any, baseScore: number) {
+      if (m.id === tmdbId) return; // Skip self
+      if (!m.poster_path || !(m.release_date || m.first_air_date) || !(m.title || m.name)) return;
+      
+      const existing = candidateScores.get(m.id);
+      if (existing) {
+        existing.score += baseScore; // Boost if found in multiple lists
+      } else {
+        candidateScores.set(m.id, { movie: { ...m, media_type: mediaType }, score: baseScore });
+      }
+    }
+
+    // 1. Recommendations (Score: 10) - highly tailored to the specific movie
+    if (detail.recommendations?.results) {
+      detail.recommendations.results.forEach((m: any) => addCandidate(m, 10));
+    }
+
+    // 2. Similar (Score: 5) - TMDB's algorithm
+    if (detail.similar?.results) {
+      detail.similar.results.forEach((m: any) => addCandidate(m, 5));
+    }
+
+    // Parallel secondary fetches for Franchise & Director
+    const secondaryFetches: Promise<any>[] = [];
+
+    // 3. Collection (Franchise)
+    if (detail.belongs_to_collection) {
+      secondaryFetches.push(
+        tmdbFetch<any>(`/collection/${detail.belongs_to_collection.id}`)
+          .then(coll => ({ type: "collection", results: coll.parts || [] }))
+          .catch(() => null)
+      );
+    }
+
+    // 4. Director
+    if (mediaType === "movie" && detail.credits?.crew) {
+      const director = detail.credits.crew.find((c: any) => c.job === "Director");
+      if (director) {
+        secondaryFetches.push(
+          tmdbFetch<any>(`/discover/movie`, { 
+            with_crew: String(director.id), 
+            sort_by: "popularity.desc" 
+          })
+          .then(res => ({ type: "director", results: res.results || [] }))
+          .catch(() => null)
+        );
+      }
+    }
+
+    const secondaryResults = await Promise.all(secondaryFetches);
+    for (const res of secondaryResults) {
+      if (res && res.type === "collection") {
+        // Highly prioritize franchise movies
+        res.results.forEach((m: any) => addCandidate(m, 50));
+      } else if (res && res.type === "director") {
+        // Prioritize director movies
+        res.results.forEach((m: any) => addCandidate(m, 30));
+      }
+    }
+
+    // Sort by score descending, breaking ties by popularity if available
+    const sortedCandidates = Array.from(candidateScores.values())
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return (b.movie.popularity || 0) - (a.movie.popularity || 0);
+      })
+      .map(c => c.movie);
 
     // Enrich the top 24 similar movies
-    const top = filtered.slice(0, 24);
+    const top = sortedCandidates.slice(0, 24);
     return enrichMovies(top);
   } catch (error) {
     console.error("Error fetching similar movies:", error);
