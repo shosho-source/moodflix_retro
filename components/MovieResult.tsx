@@ -64,6 +64,15 @@ export default function MovieResult({
   const [showProviders, setShowProviders] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const [prevMovieId, setPrevMovieId] = useState(movie.id);
+  if (movie.id !== prevMovieId) {
+    setPrevMovieId(movie.id);
+    setSimilarMovies([]);
+    setShowProviders(false);
+    setShowTrailer(false);
+    setExpandedBlurbId(null);
+  }
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
@@ -71,16 +80,24 @@ export default function MovieResult({
   }, [movie.id]);
 
   useEffect(() => {
+
     if (movie.tmdbId) {
+      const abortController = new AbortController();
       const type = movie.mediaType || "movie";
-      fetch(`/api/similar?id=${movie.tmdbId}&type=${type}`)
+      fetch(`/api/similar?id=${movie.tmdbId}&type=${type}`, { signal: abortController.signal })
         .then(r => r.json())
         .then(d => setSimilarMovies(d.results || []))
-        .catch(console.error);
+        .catch(err => {
+          if (err.name !== 'AbortError') {
+            console.error("Error fetching similar movies:", err);
+          }
+        });
+        
+      return () => abortController.abort();
     }
   }, [movie.tmdbId, movie.mediaType]);
 
-  const uniqueProviders = [];
+  const uniqueProviders: Array<{ provider_id: number; provider_name: string; logo_path: string }> = [];
   if (movie.providers) {
     const seen = new Set();
     for (const p of movie.providers) {
@@ -236,7 +253,7 @@ export default function MovieResult({
                         className="transition-transform hover:scale-110 inline-block"
                       >
                         <Image 
-                          src={`https://image.tmdb.org/t/p/original${p.logo_path}`} 
+                          src={`https://image.tmdb.org/t/p/w45${p.logo_path}`} 
                           alt={p.provider_name}
                           title={`Watch on ${p.provider_name}`}
                           width={32}

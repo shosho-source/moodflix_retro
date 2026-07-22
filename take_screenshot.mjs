@@ -1,19 +1,16 @@
-import { chromium } from 'playwright';
+import puppeteer from 'puppeteer';
 
 (async () => {
   try {
-    const browser = await chromium.launch();
-    const page = await browser.newPage({
-      viewport: { width: 375, height: 812 },
-      isMobile: true,
-      hasTouch: true
-    });
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.setViewport({ width: 375, height: 812, isMobile: true, hasTouch: true });
     
     console.log('Navigating to http://localhost:3000...');
-    await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
+    await page.goto('http://localhost:3000', { waitUntil: 'networkidle0' });
     
     console.log('Waiting for animation and picking movie (10s)...');
-    await page.waitForTimeout(10000); // 10 seconds to make sure splash is gone
+    await new Promise(r => setTimeout(r, 10000));
     
     await page.screenshot({ path: 'mobile-screenshot.png' });
     await browser.close();

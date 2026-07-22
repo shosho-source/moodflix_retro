@@ -54,7 +54,7 @@ export default function SplashScreen({ visible }: SplashScreenProps) {
           className="h-full bg-[var(--retro-fg)]"
           initial={{ width: "0%" }}
           animate={{ width: "100%" }}
-          transition={{ duration: 10, ease: "linear" }}
+          transition={{ duration: 2, ease: "linear" }}
         />
       </motion.div>
       

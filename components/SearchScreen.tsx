@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import Image from "next/image";
+
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Movie } from "@/lib/types";
@@ -18,21 +18,36 @@ export default function SearchScreen() {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   // Debounced search
   const doSearch = useCallback(async (q: string) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     if (q.trim().length < 2) {
       setResults([]);
       return;
     }
     setLoading(true);
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
     try {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`);
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q.trim())}`, { signal: abortController.signal });
       const data = await res.json();
       setResults(data.results ?? []);
-    } catch {
-      setResults([]);
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name !== 'AbortError') {
+        setResults([]);
+        console.error("Search error:", err);
+      } else if (!(err instanceof Error)) {
+        setResults([]);
+        console.error("Search error:", err);
+      }
     } finally {
-      setLoading(false);
+      if (abortControllerRef.current === abortController) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -135,17 +150,8 @@ export default function SearchScreen() {
                         className="search-result-card"
                       >
                         
-                        <div className="w-12 h-[72px] rounded-none overflow-hidden shrink-0 bg-[#ddd]">
-                          {movie.posterPath && (
-                            <Image
-                              src={movie.posterPath}
-                              alt={movie.title}
-                              width={48}
-                              height={72}
-                              className="w-full h-full object-cover"
-                              unoptimized
-                            />
-                          )}
+                        <div className="w-12 shrink-0">
+                          <PosterCard movie={movie} />
                         </div>
                         <div className="flex-1 text-left min-w-0">
                           <p className="font-display text-[15px] font-bold truncate" >

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Movie, QuizAnswers, emptyAnswers } from "@/lib/types";
 import { recommend, scoreMovie, maxScore } from "@/lib/recommend";
-import { genreList, dateGenres } from "@/lib/movies";
+import { genreList, dateGenres } from "@/lib/genre-lists";
 import SplashScreen from "./SplashScreen";
 import IntroScreen from "./IntroScreen";
 import QuizSteps from "./QuizSteps";
@@ -37,7 +37,7 @@ export default function Quiz() {
     async function load() {
       try {
         const fetchPromise = fetch("/api/movies").then(res => res.json());
-        const minTimerPromise = new Promise(resolve => setTimeout(resolve, 4000));
+        const minTimerPromise = new Promise(resolve => setTimeout(resolve, 2000));
         
         const [data] = await Promise.all([fetchPromise, minTimerPromise]);
 

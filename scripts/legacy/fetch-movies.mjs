@@ -1,6 +1,7 @@
 /**
- * Pre-fetch movies from TMDB and save as a static JSON file.
- * Run with: node scripts/fetch-movies.mjs
+ * [LEGACY] Pre-fetch movies from TMDB and save as a static JSON file.
+ * This is a historical/manual script and not part of the live data path.
+ * Run with: node scripts/legacy/fetch-movies.mjs
  */
 import https from "node:https";
 import { writeFileSync } from "node:fs";

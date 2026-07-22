@@ -41,6 +41,7 @@ const GENRE_TO_MOODS: Record<number, Mood[]> = {
   53: ["neutral"],             // Thriller
   10752: ["sad", "neutral"],   // War
   37: ["neutral"],             // Western
+  99: ["neutral"],             // Documentary
 };
 
 // ─── Occasion inference from TMDB genres ─────────────────────────
@@ -62,6 +63,7 @@ const GENRE_TO_OCCASIONS: Record<number, Occasion[]> = {
   53: ["solo", "friends"],            // Thriller
   10752: ["solo"],                    // War
   37: ["friends", "solo"],            // Western
+  99: ["solo", "friends"],            // Documentary
 };
 
 // ─── Category inference from TMDB genre combos + keywords ────────
@@ -371,7 +373,7 @@ function hueFromGenres(genreIds: number[]): number {
   const genreHues: Record<number, number> = {
     28: 8, 12: 25, 16: 48, 35: 45, 80: 0, 18: 220,
     10751: 130, 14: 280, 36: 40, 27: 330, 10749: 340,
-    878: 200, 53: 15, 10752: 100, 37: 30,
+    878: 200, 53: 15, 10752: 100, 37: 30, 99: 210, 9648: 300,
   };
   for (const gid of genreIds) {
     if (genreHues[gid] !== undefined) return genreHues[gid];
@@ -475,37 +477,45 @@ export async function fetchTMDBMovies(): Promise<Movie[]> {
   // Step 1: Fetch popular + top-rated movies (broad coverage, randomized pages)
   const popularParams = { sort_by: "popularity.desc", "vote_count.gte": "500" };
   const topRatedParams = { sort_by: "vote_average.desc", "vote_count.gte": "1000" };
-
-  const popularCalls = Array.from({ length: 12 }, () =>
-    fetchDiscoverPage(randomPage(40), popularParams)
-  );
-  const topRatedCalls = Array.from({ length: 12 }, () =>
-    fetchDiscoverPage(randomPage(40), topRatedParams)
-  );
-
-  // Step 2: Fetch genre-specific movies for better coverage
   const genreParams = { sort_by: "vote_average.desc", "vote_count.gte": "200" };
-  const genreCalls = [
-    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "35,10749" }),
-    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "878" }),
-    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "28" }),
-    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "16,10751" }),
-    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "53,80" }),
-    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "18,36" }),
-    fetchDiscoverPage(randomPage(5), { ...genreParams, with_keywords: "10683" }), // coming of age
-    fetchDiscoverPage(randomPage(5), { ...genreParams, with_keywords: "158718|15814|9729" }), // queer
+
+  const callThunks = [
+    ...Array.from({ length: 12 }, () => () => fetchDiscoverPage(randomPage(40), popularParams)),
+    ...Array.from({ length: 12 }, () => () => fetchDiscoverPage(randomPage(40), topRatedParams)),
+    () => fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "35,10749" }),
+    () => fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "878" }),
+    () => fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "28" }),
+    () => fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "16,10751" }),
+    () => fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "53,80" }),
+    () => fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "18,36" }),
+    () => fetchDiscoverPage(randomPage(5), { ...genreParams, with_keywords: "10683" }),
+    () => fetchDiscoverPage(randomPage(5), { ...genreParams, with_keywords: "158718|15814|9729" }),
+    () => fetchDiscoverPage(randomPage(10), { ...popularParams }, "tv"),
+    () => fetchDiscoverPage(randomPage(10), { ...topRatedParams }, "tv"),
+    () => fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "35,10749" }, "tv"),
+    () => fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "10759,10765" }, "tv"),
   ];
 
-  // Step 3: Fetch TV Shows
-  const tvCalls = [
-    fetchDiscoverPage(randomPage(10), { ...popularParams }, "tv"),
-    fetchDiscoverPage(randomPage(10), { ...topRatedParams }, "tv"),
-    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "35,10749" }, "tv"),
-    fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "10759,10765" }, "tv"), // Action/Sci-Fi for TV
-  ];
+  const allRaw: TMDBMovie[] = [];
+  const BATCH_SIZE = 12;
+  for (let i = 0; i < callThunks.length; i += BATCH_SIZE) {
+    const batch = callThunks.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(batch.map(fn => fn()));
+    for (const res of results) {
+      if (res.status === "fulfilled") {
+        allRaw.push(...res.value);
+      } else {
+        console.error("Error fetching discover page:", res.reason);
+      }
+    }
+    if (i + BATCH_SIZE < callThunks.length) {
+      await new Promise((r) => setTimeout(r, 300));
+    }
+  }
 
-  const allBatches = await Promise.all([...popularCalls, ...topRatedCalls, ...genreCalls, ...tvCalls]);
-  const allRaw = allBatches.flat();
+  if (allRaw.length === 0) {
+    throw new Error("Failed to fetch any movies from TMDB discover endpoints.");
+  }
 
   const seen = new Map<number, TMDBMovie>();
   for (const m of allRaw) {
@@ -515,7 +525,16 @@ export async function fetchTMDBMovies(): Promise<Movie[]> {
   }
 
   const uniqueMovies = [...seen.values()];
-  return enrichMovies(uniqueMovies);
+  const initialCount = uniqueMovies.length;
+  // Coarse pre-filter to reduce expensive fetchMovieDetail calls
+  const preFiltered = uniqueMovies
+    .filter(m => m.vote_average >= 5.0 && m.vote_count >= 50)
+    .sort((a, b) => b.vote_average * b.vote_count - a.vote_average * a.vote_count)
+    .slice(0, 150);
+  
+  console.log(`Pre-filter reduced movie pool from ${initialCount} to ${preFiltered.length} for detail enrichment.`);
+
+  return enrichMovies(preFiltered);
 }
 
 // ─── Search movies by query ──────────────────────────────────────

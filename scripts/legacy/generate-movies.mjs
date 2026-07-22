@@ -1,3 +1,7 @@
+/**
+ * [LEGACY] Generate a hardcoded movie list.
+ * This is a historical/manual script and not part of the live data path.
+ */
 import { writeFileSync } from "fs";
 
 const movies = [

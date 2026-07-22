@@ -5,7 +5,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const idParam = searchParams.get("id");
-    const typeParam = searchParams.get("type") as "movie" | "tv" || "movie";
+    const rawType = searchParams.get("type");
+    const typeParam = rawType === "tv" ? "tv" : "movie";
 
     if (!idParam) {
       return NextResponse.json({ error: "Missing id parameter" }, { status: 400 });
