@@ -48,6 +48,36 @@ body {
   flex-direction: column;
 }
 
+/* Subtle CRT Scanlines */
+body::after {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.06) 50%);
+  background-size: 100% 4px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* Subtle text glitch for loading states */
+@keyframes textGlitch {
+  0% { transform: translate(0) }
+  20% { transform: translate(-2px, 1px) }
+  40% { transform: translate(-1px, -1px) }
+  60% { transform: translate(2px, 1px) }
+  80% { transform: translate(1px, -1px) }
+  100% { transform: translate(0) }
+}
+
+.glitch-anim {
+  animation: textGlitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+}
+
 .font-display {
   font-family: var(--font-space-mono), "Courier New", monospace;
   letter-spacing: -0.02em;

@@ -171,18 +171,36 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // 1. Local Search: Query Supabase using PostgreSQL pattern matching
-    const { data: localMovies, error } = await supabase
-      .from('movies')
-      .select('*')
-      .or(`title.ilike.%${query}%,director.ilike.%${query}%`)
-      .limit(15);
-      
-    if (error) throw error;
-
-    const results = localMovies || [];
-
-    // 2. TMDB Live Fallback
+    const results: DBRecord[] = [];
+    
+    // Tier 1: Local Hybrid Search (AI + Fuzzy Text)
+    let queryVector: number[] | null = null;
+    const words = query.trim().split(/\\s+/).length;
+    
+    // Protect Gemini quota: only vectorize conceptual queries (>= 3 words)
+    if (words >= 3) {
+      try {
+        const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
+        const embedResult = await model.embedContent(query);
+        queryVector = embedResult.embedding.values.slice(0, 768);
+      } catch (err) {
+        console.error("AI Vector search for manual query failed, falling back to pure fuzzy text:", err);
+      }
+    }
+    
+    const { data: localMovies, error } = await supabase.rpc('hybrid_search_movies', {
+      query_text: query,
+      query_embedding: queryVector,
+      match_count: 10
+    });
+    
+    if (error) {
+      console.error("Hybrid RPC failed (did you run the SQL script?):", error);
+    } else if (localMovies && localMovies.length > 0) {
+      results.push(...localMovies);
+    }
+    
+    // Tier 2: TMDB Live Fallback (Provides industry-leading fuzzy typo-matching for missing movies)
     if (results.length < 3) {
       try {
         const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&include_adult=false`);
@@ -203,6 +221,7 @@ export async function GET(request: NextRequest) {
                 genres: []
               });
               
+              // Auto-ingest new TMDB hits into local Supabase vector DB silently
               enrichAndSaveFromTMDB(tmdbMovie); 
             }
           }

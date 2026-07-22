@@ -121,12 +121,10 @@ export default function SearchScreen() {
 
                 {/* Loading state */}
                 {loading && (
-                  <div className="flex items-center justify-center py-12">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                      className="w-8 h-8 rounded-full border-[3px] border-[var(--retro-accent)] border-t-transparent"
-                    />
+                  <div className="flex flex-col items-center justify-center py-12 min-h-[150px]">
+                    <span className="font-mono text-sm sm:text-base font-bold uppercase glitch-anim">
+                      {"> QUERYING DATABASE..."}
+                    </span>
                   </div>
                 )}
 

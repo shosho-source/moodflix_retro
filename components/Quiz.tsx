@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Movie, QuizAnswers, emptyAnswers } from "@/lib/types";
 import { genreList, dateGenres } from "@/lib/genre-lists";
 import SplashScreen from "./SplashScreen";
@@ -164,9 +164,16 @@ export default function Quiz() {
       )}
 
       {stage === "loading" && (
-        <div className="text-center py-20">
-          <h2 className="font-display font-bold text-3xl mb-4 uppercase animate-pulse">Analyzing...</h2>
-          <p className="mb-8 font-mono text-sm">Matching your vibe to our database.</p>
+        <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-[var(--retro-bg)] border-2 border-[var(--retro-border)] min-h-[400px]">
+          <motion.div
+            animate={{ opacity: [1, 0.5, 1] }}
+            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+            className="text-lg sm:text-xl font-bold font-mono uppercase text-center glitch-anim"
+          >
+            {"> ANALYZING PREFERENCES..."}
+            <br/>
+            {"> SEARCHING INDEX..."}
+          </motion.div>
         </div>
       )}
 
