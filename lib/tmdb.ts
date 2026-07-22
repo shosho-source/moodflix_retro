@@ -69,7 +69,7 @@ const GENRE_TO_OCCASIONS: Record<number, Occasion[]> = {
 // ─── Category inference from TMDB genre combos + keywords ────────
 // These are TMDB keyword IDs used in discover calls for category tagging
 export const CATEGORY_KEYWORD_MAP: Record<Category, number[]> = {
-  "true-story": [818, 9672, 5765],   // based on novel, based on true story
+  "true-story": [9672],             // based on true story
   "perspective-shift": [],           // inferred from high-rating dramas
   "nyc": [5765, 10178],             // new york city, new york
   "spy-cop": [470, 6149, 9715],     // spy, police, detective
@@ -494,6 +494,14 @@ export async function fetchTMDBMovies(): Promise<Movie[]> {
     () => fetchDiscoverPage(randomPage(10), { ...topRatedParams }, "tv"),
     () => fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "35,10749" }, "tv"),
     () => fetchDiscoverPage(randomPage(10), { ...genreParams, with_genres: "10759,10765" }, "tv"),
+    
+    // Category specific fetches to guarantee ~20+ per category
+    ...Object.entries(CATEGORY_KEYWORD_MAP)
+      .filter(([_, kwIds]) => kwIds.length > 0)
+      .map(([_, kwIds]) => () => fetchDiscoverPage(1, { ...genreParams, with_keywords: kwIds.join("|") })),
+    ...Object.entries(CATEGORY_KEYWORD_MAP)
+      .filter(([_, kwIds]) => kwIds.length > 0)
+      .map(([_, kwIds]) => () => fetchDiscoverPage(2, { ...genreParams, with_keywords: kwIds.join("|") })),
   ];
 
   const allRaw: TMDBMovie[] = [];
@@ -532,11 +540,11 @@ export async function fetchTMDBMovies(): Promise<Movie[]> {
   // Sort by a blended popularity metric
   qualityMovies.sort((a, b) => (b.vote_average * b.vote_count) - (a.vote_average * a.vote_count));
 
-  // Take top 40 guaranteed hits, and 110 randomly from the rest to preserve niche/genre diversity
-  const topHits = qualityMovies.slice(0, 40);
-  const theRest = qualityMovies.slice(40).sort(() => 0.5 - Math.random());
+  // Take top 60 guaranteed hits, and 440 randomly from the rest to preserve niche/genre diversity
+  const topHits = qualityMovies.slice(0, 60);
+  const theRest = qualityMovies.slice(60).sort(() => 0.5 - Math.random());
   
-  const preFiltered = [...topHits, ...theRest.slice(0, 360)];
+  const preFiltered = [...topHits, ...theRest.slice(0, 440)];
   
   console.log(`Pre-filter reduced movie pool from ${initialCount} to ${preFiltered.length} for detail enrichment.`);
 
