@@ -73,4 +73,5 @@ export const categoryOptions: { value: Category | "none"; label: string }[] = [
   { value: "documentary", label: "Documentaries" },
   { value: "coming-of-age", label: "Coming of Age" },
   { value: "queer", label: "Queer Cinema" },
+  { value: "anime", label: "Anime" }
 ];

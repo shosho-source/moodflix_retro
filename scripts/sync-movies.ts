@@ -22,17 +22,31 @@ const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-async function fetchFromTMDB(endpoint: string, params: Record<string, string> = {}) {
+async function fetchFromTMDB(endpoint: string, params: Record<string, string> = {}, retries = 3) {
   const url = new URL(`https://api.themoviedb.org/3${endpoint}`);
   url.searchParams.set("api_key", TMDB_API_KEY!);
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value);
   }
-  const res = await fetch(url.toString());
-  if (!res.ok) {
-    throw new Error(`TMDB API Error: ${res.statusText}`);
+  
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url.toString());
+      if (!res.ok) {
+        throw new Error(`TMDB API Error: ${res.statusText}`);
+      }
+      return await res.json();
+    } catch (err) {
+      if (i === retries - 1) {
+        console.error("fetch failed on URL:", url.toString());
+        const cause = err instanceof Error ? err.cause || err.message : String(err);
+        console.error("Cause:", cause);
+        throw err;
+      }
+      console.log(`Fetch failed (attempt ${i + 1}/${retries}). Retrying in ${i + 1}s...`);
+      await delay(1000 * (i + 1));
+    }
   }
-  return res.json();
 }
 
 async function runSync() {
@@ -58,52 +72,56 @@ async function runSync() {
         }
 
         // Check if already in Supabase
-        const { data: existing } = await supabase
-          .from('movies')
-          .select('id')
-          .eq('id', movie.id)
-          .single();
-
-        if (existing) {
-          console.log(`Skipping TMDB ID ${movie.id} - already exists.`);
-          continue;
-        }
-
-        // Fetch detailed info (credits + details for genres)
-        const detail = await fetchFromTMDB(`/movie/${movie.id}`, { append_to_response: 'credits' });
-        
-        const genres = detail.genres?.map((g: { name: string }) => g.name) || [];
-        const director = detail.credits?.crew?.find((c: { job: string; name: string }) => c.job === 'Director')?.name || 'Unknown';
-        const releaseYear = movie.release_date ? parseInt(movie.release_date.split('-')[0]) : null;
-
-        const vibeString = `Title: ${movie.title}. Year: ${releaseYear}. Genres: ${genres.join(', ')}. Director: ${director}. Overview: ${movie.overview}`;
-        
-        console.log(`Generating embedding for: ${movie.title}...`);
         try {
-          const result = await model.embedContent(vibeString);
-          const embedding = result.embedding.values;
+          const { data: existing } = await supabase
+            .from('movies')
+            .select('id')
+            .eq('id', movie.id)
+            .single();
 
-          // Upsert to Supabase
-          const { error } = await supabase.from('movies').upsert({
-            id: movie.id,
-            title: movie.title,
-            overview: movie.overview,
-            poster_path: movie.poster_path,
-            genres: genres,
-            director: director,
-            release_year: releaseYear,
-            vote_average: movie.vote_average,
-            vote_count: movie.vote_count,
-            embedding: embedding
-          });
+          if (existing) {
+            console.log(`Skipping TMDB ID ${movie.id} - already exists.`);
+            continue;
+          }
 
-          if (error) {
-            console.error(`Supabase Upsert Error for ${movie.id}:`, error.message);
-          } else {
-            console.log(`Added ${movie.title} (Total: ${++addedCount}/${LIMIT})`);
+          // Fetch detailed info (credits + details for genres)
+          const detail = await fetchFromTMDB(`/movie/${movie.id}`, { append_to_response: 'credits' });
+          
+          const genres = detail.genres?.map((g: { name: string }) => g.name) || [];
+          const director = detail.credits?.crew?.find((c: { job: string; name: string }) => c.job === 'Director')?.name || 'Unknown';
+          const releaseYear = movie.release_date ? parseInt(movie.release_date.split('-')[0]) : null;
+
+          const vibeString = `Title: ${movie.title}. Year: ${releaseYear}. Genres: ${genres.join(', ')}. Director: ${director}. Overview: ${movie.overview}`;
+          
+          console.log(`Generating embedding for: ${movie.title}...`);
+          try {
+            const result = await model.embedContent(vibeString);
+            const embedding = result.embedding.values.slice(0, 768);
+
+            // Upsert to Supabase
+            const { error } = await supabase.from('movies').upsert({
+              id: movie.id,
+              title: movie.title,
+              overview: movie.overview,
+              poster_path: movie.poster_path,
+              genres: genres,
+              director: director,
+              release_year: releaseYear,
+              vote_average: movie.vote_average,
+              vote_count: movie.vote_count,
+              embedding: embedding
+            });
+
+            if (error) {
+              console.error(`Supabase Upsert Error for ${movie.id}:`, error.message);
+            } else {
+              console.log(`Added ${movie.title} (Total: ${++addedCount}/${LIMIT})`);
+            }
+          } catch (e) {
+            console.error(`Embedding Error for ${movie.id}:`, e instanceof Error ? e.message : String(e));
           }
         } catch (e) {
-          console.error(`Embedding Error for ${movie.id}:`, e instanceof Error ? e.message : String(e));
+          console.error(`Error processing TMDB ID ${movie.id}:`, e instanceof Error ? e.message : String(e));
         }
 
         // Pacing delay (4 seconds) to respect Gemini free tier limits
@@ -113,7 +131,8 @@ async function runSync() {
       page++;
     } catch (e) {
       console.error(`Error on page ${page}:`, e instanceof Error ? e.message : String(e));
-      break;
+      page++;
+      continue;
     }
   }
 

@@ -18,14 +18,27 @@ export default function Quiz() {
   const [resultIndex, setResultIndex] = useState(0);
   const [overrideMovie, setOverrideMovie] = useState<Movie | null>(null);
   const [allGenres, setAllGenres] = useState(false);
-  const [sessionSeed] = useState(() => Date.now());
 
   const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const [movieCount, setMovieCount] = useState<number>(500);
 
-  // Simulate loading delay for the intro splash screen
+  // Simulate loading delay for the intro splash screen and fetch db stats
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      // Fetch actual movie count from DB
+      try {
+        const res = await fetch("/api/stats");
+        if (res.ok) {
+          const data = await res.json();
+          if (!cancelled && data.count) {
+            setMovieCount(data.count);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch DB stats:", err);
+      }
+      
       await new Promise(resolve => setTimeout(resolve, 2000));
       if (!cancelled) {
         setStage("intro");
@@ -115,8 +128,8 @@ export default function Quiz() {
       <div className="pt-6 flex-1 overflow-hidden flex flex-col relative">
       {stage === "intro" && (
         <IntroScreen
-          movieCount={500}
-          genreCount={20}
+          movieCount={movieCount}
+          genreCount={genreList.length}
           onStartQuiz={() => setStage("quiz")}
         />
       )}

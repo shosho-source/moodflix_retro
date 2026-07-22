@@ -23,7 +23,8 @@ export type Category =
   | "documentary"
   | "tv-series"
   | "coming-of-age"
-  | "queer";
+  | "queer"
+  | "anime";
 
 export interface Movie {
   id: string;

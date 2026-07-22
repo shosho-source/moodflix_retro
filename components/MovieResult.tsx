@@ -58,19 +58,29 @@ export default function MovieResult({
   onSelectSimilar,
 }: MovieResultProps) {
   const [showTrailer, setShowTrailer] = useState(false);
+  const [trailerKey, setTrailerKey] = useState<string | null>(movie.trailerKey || null);
+  const [isFetchingTrailer, setIsFetchingTrailer] = useState(false);
   const [expandedBlurbId, setExpandedBlurbId] = useState<string | null>(null);
   const expandedBlurb = expandedBlurbId === movie.id;
   const [similarMovies, setSimilarMovies] = useState<Movie[]>([]);
+  const [runtime, setRuntime] = useState<number | undefined>(movie.runtime);
+  const [providers, setProviders] = useState<Array<{ provider_id: number; provider_name: string; logo_path: string }>>(movie.providers || []);
   const [showProviders, setShowProviders] = useState(false);
+  const [isClamped, setIsClamped] = useState(false);
+  const blurbRef = useRef<HTMLParagraphElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [prevMovieId, setPrevMovieId] = useState(movie.id);
   if (movie.id !== prevMovieId) {
     setPrevMovieId(movie.id);
     setSimilarMovies([]);
+    setProviders(movie.providers || []);
+    setTrailerKey(movie.trailerKey || null);
+    setIsFetchingTrailer(movie.trailerKey === undefined);
     setShowProviders(false);
     setShowTrailer(false);
     setExpandedBlurbId(null);
+    setRuntime(movie.runtime);
   }
 
   useEffect(() => {
@@ -93,14 +103,43 @@ export default function MovieResult({
           }
         });
         
+      if (movie.trailerKey === undefined) {
+        fetch(`/api/details?id=${movie.tmdbId}`, { signal: abortController.signal })
+          .then(r => r.json())
+          .then(d => {
+            if (d.providers) setProviders(d.providers);
+            if (d.trailerKey) setTrailerKey(d.trailerKey);
+            if (d.runtime) setRuntime(d.runtime);
+          })
+          .catch(err => {
+            if (err.name !== 'AbortError') {
+              console.error("Error fetching movie details:", err);
+            }
+          })
+          .finally(() => {
+            setIsFetchingTrailer(false);
+          });
+      }
+        
       return () => abortController.abort();
     }
-  }, [movie.tmdbId, movie.mediaType]);
+  }, [movie.tmdbId, movie.mediaType, movie.trailerKey]);
+
+  useEffect(() => {
+    const checkClamp = () => {
+      if (blurbRef.current) {
+        setIsClamped(blurbRef.current.scrollHeight > blurbRef.current.clientHeight || expandedBlurb);
+      }
+    };
+    checkClamp();
+    window.addEventListener('resize', checkClamp);
+    return () => window.removeEventListener('resize', checkClamp);
+  }, [movie.blurb, expandedBlurb]);
 
   const uniqueProviders: Array<{ provider_id: number; provider_name: string; logo_path: string }> = [];
-  if (movie.providers) {
+  if (providers && providers.length > 0) {
     const seen = new Set();
-    for (const p of movie.providers) {
+    for (const p of providers) {
       const name = p.provider_name.toLowerCase();
       let normalized = name;
       if (name.includes("amazon") || name.includes("prime")) normalized = "amazon";
@@ -182,7 +221,7 @@ export default function MovieResult({
           </div>
           <div className="flex-1 flex flex-col items-center text-center sm:items-start sm:text-left w-full mt-2 sm:mt-0">
             <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-4">
-              {movie.genres.map((g) => (
+              {movie.genres?.map((g) => (
                 <span
                   key={g}
                   className="inline-flex items-center gap-1.5 text-xs font-mono font-bold px-2 py-1 border border-[var(--retro-border)] uppercase"
@@ -211,15 +250,15 @@ export default function MovieResult({
             <p className="flex items-center justify-center sm:justify-start gap-3 text-xs sm:text-sm mb-1 font-mono uppercase tracking-widest font-bold">
               <span>{movie.year}</span>
               <span className="w-1 h-1 bg-[var(--retro-border)]"></span>
-              <span>{movie.runtime} MIN</span>
+              <span>{runtime || '?'} MIN</span>
               <span className="w-1 h-1 bg-[var(--retro-border)]"></span>
               <span>IMDB {movie.voteAverage != null && movie.voteAverage > 0 ? movie.voteAverage.toFixed(1) : "N/A"}</span>
             </p>
             <div className="mt-2 sm:mt-4 leading-relaxed text-left w-full sm:text-left text-center">
-              <p className={`${expandedBlurb ? '' : 'line-clamp-3'} text-xs sm:text-sm font-medium transition-all`}>
+              <p ref={blurbRef} className={`${expandedBlurb ? '' : 'line-clamp-3'} text-xs sm:text-sm font-medium transition-all`}>
                 {movie.blurb}
               </p>
-              {movie.blurb.length > 130 && (
+              {isClamped && (
                 <button 
                   onClick={() => setExpandedBlurbId(expandedBlurb ? null : movie.id)}
                   className="text-[10px] sm:text-xs font-mono font-bold mt-1 sm:mt-2 uppercase text-[var(--retro-border)] hover:text-white transition-colors"
@@ -284,19 +323,29 @@ export default function MovieResult({
 
         <div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-start gap-4 shrink-0 pt-3 pb-3 sm:pt-4 sm:pb-4 mt-4 sm:mt-8 border-t-2 border-[var(--retro-border)] sticky bottom-0 bg-[var(--retro-surface)] z-30 w-full relative">
           
-          {movie.trailerKey && (
-            <button
-              onClick={() => setShowTrailer(true)}
-              className="brutalist-button py-2 sm:py-3 px-2 sm:px-6 text-xs sm:text-sm"
-            >
-              <span className="sm:hidden">[TRAILER]</span>
-              <span className="hidden sm:inline">[PLAY_TRAILER]</span>
-            </button>
-          )}
+          <button
+            onClick={() => {
+              if (trailerKey) {
+                setShowTrailer(true);
+              } else if (!isFetchingTrailer) {
+                window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title + ' trailer')}`, '_blank');
+              }
+            }}
+            disabled={isFetchingTrailer}
+            className={`brutalist-button py-2 sm:py-3 px-2 sm:px-6 text-xs sm:text-sm ${isFetchingTrailer ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <span className="sm:hidden">
+              {isFetchingTrailer ? '[...]' : trailerKey ? '[TRAILER]' : '[FIND_TRAILER]'}
+            </span>
+            <span className="hidden sm:inline">
+              {isFetchingTrailer ? '[LOADING_TRAILER]' : trailerKey ? '[PLAY_TRAILER]' : '[SEARCH_TRAILER]'}
+            </span>
+          </button>
+          
           {onRestart && (
             <button
               onClick={onRestart}
-              className={`brutalist-button py-2 sm:py-3 px-6 text-xs sm:text-sm ${!movie.trailerKey ? 'col-span-2' : ''}`}
+              className={`brutalist-button py-2 sm:py-3 px-6 text-xs sm:text-sm`}
             >
               {restartLabel}
             </button>
@@ -340,9 +389,12 @@ export default function MovieResult({
         )}
         </div>
       </div>
-
-      {showTrailer && movie.trailerKey && (
-        <TrailerModal trailerKey={movie.trailerKey} onClose={() => setShowTrailer(false)} />
+      
+      {showTrailer && trailerKey && (
+        <TrailerModal 
+          trailerKey={trailerKey} 
+          onClose={() => setShowTrailer(false)} 
+        />
       )}
     </>
   );

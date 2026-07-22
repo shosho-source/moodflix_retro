@@ -86,6 +86,7 @@ export const CATEGORY_KEYWORD_MAP: Record<Category, number[]> = {
   "tv-series": [],                  // mapped by media type
   "coming-of-age": [10683],         // coming of age
   "queer": [158718, 15814, 9729],   // lgbt, homosexuality, lesbian
+  "anime": [210024, 287501],        // anime
 };
 
 // ─── TMDB certification → our Rating ─────────────────────────────
@@ -333,6 +334,9 @@ function inferCategories(
   if (kwNames.has("tragedy") || kwNames.has("tearjerker") || kwNames.has("melancholy") || kwNames.has("sad ending")) {
     categories.add("sad-ending");
   }
+  if (kwNames.has("anime") || kwNames.has("japanese anime")) {
+    categories.add("anime");
+  }
 
   // Genre-based inference
   if (genreIds.includes(36)) categories.add("true-story"); // History genre
@@ -497,11 +501,11 @@ export async function fetchTMDBMovies(): Promise<Movie[]> {
     
     // Category specific fetches to guarantee ~20+ per category
     ...Object.entries(CATEGORY_KEYWORD_MAP)
-      .filter(([_, kwIds]) => kwIds.length > 0)
-      .map(([_, kwIds]) => () => fetchDiscoverPage(1, { ...genreParams, with_keywords: kwIds.join("|") })),
+      .filter(([, kwIds]) => kwIds.length > 0)
+      .map(([, kwIds]) => () => fetchDiscoverPage(1, { ...genreParams, with_keywords: kwIds.join("|") })),
     ...Object.entries(CATEGORY_KEYWORD_MAP)
-      .filter(([_, kwIds]) => kwIds.length > 0)
-      .map(([_, kwIds]) => () => fetchDiscoverPage(2, { ...genreParams, with_keywords: kwIds.join("|") })),
+      .filter(([, kwIds]) => kwIds.length > 0)
+      .map(([, kwIds]) => () => fetchDiscoverPage(2, { ...genreParams, with_keywords: kwIds.join("|") })),
   ];
 
   const allRaw: TMDBMovie[] = [];
@@ -573,17 +577,35 @@ export async function searchTMDBMovies(query: string): Promise<Movie[]> {
 }
 
 // ─── Fetch similar movies ────────────────────────────────────────
+interface GenericTMDBResponse {
+  id?: number;
+  title?: string;
+  name?: string;
+  poster_path?: string;
+  release_date?: string;
+  first_air_date?: string;
+  popularity?: number;
+  job?: string;
+  parts?: GenericTMDBResponse[];
+  results?: GenericTMDBResponse[];
+  recommendations?: { results: GenericTMDBResponse[] };
+  similar?: { results: GenericTMDBResponse[] };
+  belongs_to_collection?: { id: number };
+  credits?: { crew: GenericTMDBResponse[] };
+  [key: string]: unknown;
+}
+
 export async function fetchSimilarMovies(tmdbId: number, mediaType: "movie" | "tv" = "movie"): Promise<Movie[]> {
   try {
-    const detail = await tmdbFetch<any>(`/${mediaType}/${tmdbId}`, {
+    const detail = await tmdbFetch<GenericTMDBResponse>(`/${mediaType}/${tmdbId}`, {
       append_to_response: "similar,recommendations,credits",
       language: "en-US",
     });
 
-    const candidateScores = new Map<number, { movie: any, score: number }>();
+    const candidateScores = new Map<number, { movie: GenericTMDBResponse, score: number }>();
 
-    function addCandidate(m: any, baseScore: number) {
-      if (m.id === tmdbId) return; // Skip self
+    function addCandidate(m: GenericTMDBResponse, baseScore: number) {
+      if (!m.id || m.id === tmdbId) return; // Skip self or invalid
       if (!m.poster_path || !(m.release_date || m.first_air_date) || !(m.title || m.name)) return;
       
       const existing = candidateScores.get(m.id);
@@ -596,21 +618,21 @@ export async function fetchSimilarMovies(tmdbId: number, mediaType: "movie" | "t
 
     // 1. Recommendations (Score: 10) - highly tailored to the specific movie
     if (detail.recommendations?.results) {
-      detail.recommendations.results.forEach((m: any) => addCandidate(m, 10));
+      detail.recommendations.results.forEach((m: GenericTMDBResponse) => addCandidate(m, 10));
     }
 
     // 2. Similar (Score: 5) - TMDB's algorithm
     if (detail.similar?.results) {
-      detail.similar.results.forEach((m: any) => addCandidate(m, 5));
+      detail.similar.results.forEach((m: GenericTMDBResponse) => addCandidate(m, 5));
     }
 
     // Parallel secondary fetches for Franchise & Director
-    const secondaryFetches: Promise<any>[] = [];
+    const secondaryFetches: Promise<{ type: string; results: GenericTMDBResponse[] } | null>[] = [];
 
     // 3. Collection (Franchise)
     if (detail.belongs_to_collection) {
       secondaryFetches.push(
-        tmdbFetch<any>(`/collection/${detail.belongs_to_collection.id}`)
+        tmdbFetch<GenericTMDBResponse>(`/collection/${detail.belongs_to_collection.id}`)
           .then(coll => ({ type: "collection", results: coll.parts || [] }))
           .catch(() => null)
       );
@@ -618,10 +640,10 @@ export async function fetchSimilarMovies(tmdbId: number, mediaType: "movie" | "t
 
     // 4. Director
     if (mediaType === "movie" && detail.credits?.crew) {
-      const director = detail.credits.crew.find((c: any) => c.job === "Director");
+      const director = detail.credits.crew.find((c: GenericTMDBResponse) => c.job === "Director");
       if (director) {
         secondaryFetches.push(
-          tmdbFetch<any>(`/discover/movie`, { 
+          tmdbFetch<GenericTMDBResponse>(`/discover/movie`, { 
             with_crew: String(director.id), 
             sort_by: "popularity.desc" 
           })
@@ -635,10 +657,10 @@ export async function fetchSimilarMovies(tmdbId: number, mediaType: "movie" | "t
     for (const res of secondaryResults) {
       if (res && res.type === "collection") {
         // Highly prioritize franchise movies
-        res.results.forEach((m: any) => addCandidate(m, 50));
+        res.results.forEach((m: GenericTMDBResponse) => addCandidate(m, 50));
       } else if (res && res.type === "director") {
         // Prioritize director movies
-        res.results.forEach((m: any) => addCandidate(m, 30));
+        res.results.forEach((m: GenericTMDBResponse) => addCandidate(m, 30));
       }
     }
 
@@ -648,7 +670,7 @@ export async function fetchSimilarMovies(tmdbId: number, mediaType: "movie" | "t
         if (b.score !== a.score) return b.score - a.score;
         return (b.movie.popularity || 0) - (a.movie.popularity || 0);
       })
-      .map(c => c.movie);
+      .map(c => c.movie as unknown as TMDBMovie);
 
     // Enrich the top 24 similar movies
     const top = sortedCandidates.slice(0, 24);

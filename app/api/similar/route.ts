@@ -36,18 +36,20 @@ export async function GET(request: NextRequest) {
         // 3. Primary Path: pass embedding to match_movies RPC
         const { data: matchedMovies, error } = await supabase.rpc('match_movies', {
           query_embedding: sourceMovie.embedding,
-          match_threshold: 0.0,
-          match_count: 24,
+          match_threshold: 0.65, // Use strict threshold so we don't get randoms
+          match_count: 15,
           exclude_id: tmdbId
         });
 
-        if (!error && matchedMovies) {
+        if (!error && matchedMovies && matchedMovies.length > 2) {
           // Adapt to frontend movie interface expectations
-          const formattedResults = matchedMovies.map((m: any) => ({
+          interface DBRecord { id: number; title: string; overview: string; poster_path: string | null; vote_average: number; genres?: string[]; release_year?: number | null; [key: string]: unknown; }
+          const formattedResults = matchedMovies.map((m: DBRecord) => ({
             ...m,
             tmdbId: m.id,
             id: `tmdb-${m.id}`,
             year: m.release_year,
+            voteAverage: m.vote_average,
             posterPath: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : null,
             blurb: m.overview
           }));
