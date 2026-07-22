@@ -526,11 +526,17 @@ export async function fetchTMDBMovies(): Promise<Movie[]> {
 
   const uniqueMovies = [...seen.values()];
   const initialCount = uniqueMovies.length;
-  // Coarse pre-filter to reduce expensive fetchMovieDetail calls
-  const preFiltered = uniqueMovies
-    .filter(m => m.vote_average >= 5.0 && m.vote_count >= 50)
-    .sort((a, b) => b.vote_average * b.vote_count - a.vote_average * a.vote_count)
-    .slice(0, 150);
+  // Coarse pre-filter to reduce expensive fetchMovieDetail calls while maintaining genre diversity
+  const qualityMovies = uniqueMovies.filter(m => m.vote_average >= 5.0 && m.vote_count >= 50);
+  
+  // Sort by a blended popularity metric
+  qualityMovies.sort((a, b) => (b.vote_average * b.vote_count) - (a.vote_average * a.vote_count));
+
+  // Take top 40 guaranteed hits, and 110 randomly from the rest to preserve niche/genre diversity
+  const topHits = qualityMovies.slice(0, 40);
+  const theRest = qualityMovies.slice(40).sort(() => 0.5 - Math.random());
+  
+  const preFiltered = [...topHits, ...theRest.slice(0, 110)];
   
   console.log(`Pre-filter reduced movie pool from ${initialCount} to ${preFiltered.length} for detail enrichment.`);
 
@@ -561,7 +567,7 @@ export async function searchTMDBMovies(query: string): Promise<Movie[]> {
 // ─── Fetch similar movies ────────────────────────────────────────
 export async function fetchSimilarMovies(tmdbId: number, mediaType: "movie" | "tv" = "movie"): Promise<Movie[]> {
   try {
-    const data = await tmdbFetch<TMDBDiscoverResponse>(`/${mediaType}/${tmdbId}/recommendations`, {
+    const data = await tmdbFetch<TMDBDiscoverResponse>(`/${mediaType}/${tmdbId}/similar`, {
       language: "en-US",
       page: "1",
     });
