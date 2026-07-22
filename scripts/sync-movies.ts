@@ -72,8 +72,8 @@ async function runSync() {
         // Fetch detailed info (credits + details for genres)
         const detail = await fetchFromTMDB(`/movie/${movie.id}`, { append_to_response: 'credits' });
         
-        const genres = detail.genres?.map((g: any) => g.name) || [];
-        const director = detail.credits?.crew?.find((c: any) => c.job === 'Director')?.name || 'Unknown';
+        const genres = detail.genres?.map((g: { name: string }) => g.name) || [];
+        const director = detail.credits?.crew?.find((c: { job: string; name: string }) => c.job === 'Director')?.name || 'Unknown';
         const releaseYear = movie.release_date ? parseInt(movie.release_date.split('-')[0]) : null;
 
         const vibeString = `Title: ${movie.title}. Year: ${releaseYear}. Genres: ${genres.join(', ')}. Director: ${director}. Overview: ${movie.overview}`;
@@ -102,8 +102,8 @@ async function runSync() {
           } else {
             console.log(`Added ${movie.title} (Total: ${++addedCount}/${LIMIT})`);
           }
-        } catch (e: any) {
-          console.error(`Embedding Error for ${movie.id}:`, e.message);
+        } catch (e) {
+          console.error(`Embedding Error for ${movie.id}:`, e instanceof Error ? e.message : String(e));
         }
 
         // Pacing delay (4 seconds) to respect Gemini free tier limits
@@ -111,8 +111,8 @@ async function runSync() {
       }
       
       page++;
-    } catch (e: any) {
-      console.error(`Error on page ${page}:`, e.message);
+    } catch (e) {
+      console.error(`Error on page ${page}:`, e instanceof Error ? e.message : String(e));
       break;
     }
   }
