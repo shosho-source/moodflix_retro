@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Movie, QuizAnswers, emptyAnswers } from "@/lib/types";
-import { recommend, scoreMovie, maxScore } from "@/lib/recommend";
 import { genreList, dateGenres } from "@/lib/genre-lists";
 import SplashScreen from "./SplashScreen";
 import IntroScreen from "./IntroScreen";
@@ -21,39 +20,15 @@ export default function Quiz() {
   const [allGenres, setAllGenres] = useState(false);
   const [sessionSeed] = useState(() => Date.now());
 
-  // Movie pool from TMDB API
-  const [moviePool, setMoviePool] = useState<Movie[]>([]);
-  const [, setMovieSource] = useState<string>("loading");
+  const [searchResults, setSearchResults] = useState<Movie[]>([]);
 
-  const genreCount = useMemo(() => {
-    const genres = new Set<string>();
-    moviePool.forEach(m => m.genres.forEach(g => genres.add(g)));
-    return genres.size;
-  }, [moviePool]);
-
-  // Fetch movies from API on mount
+  // Simulate loading delay for the intro splash screen
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      try {
-        const fetchPromise = fetch("/api/movies").then(res => res.json());
-        const minTimerPromise = new Promise(resolve => setTimeout(resolve, 2000));
-        
-        const [data] = await Promise.all([fetchPromise, minTimerPromise]);
-
-        if (!cancelled) {
-          if (!data.movies || data.movies.length === 0) {
-            throw new Error("No movies returned");
-          }
-          setMoviePool(data.movies);
-          setMovieSource(data.source ?? "unknown");
-          setStage("intro");
-        }
-      } catch (e) {
-        if (!cancelled) {
-          console.error("Failed to load movies:", e);
-          setStage("error");
-        }
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      if (!cancelled) {
+        setStage("intro");
       }
     }
     load();
@@ -70,18 +45,8 @@ export default function Quiz() {
     return base;
   }, [answers.ratingsMatter]);
 
-  // Compute recommendations using the scored engine
-  const results = useMemo(
-    () => recommend(answers, [], moviePool, sessionSeed),
-    [answers, moviePool, sessionSeed]
-  );
-
-  const current = results[resultIndex] ?? null;
-  const totalMatches = results.length;
-
-  // Score for current movie
-  const currentScore = current ? scoreMovie(current, answers) : 0;
-  const currentMaxScore = maxScore(answers);
+  const current = searchResults[resultIndex] ?? null;
+  const totalMatches = searchResults.length;
 
   const stepKey = steps[stepIndex];
   const canAdvance =
@@ -94,13 +59,26 @@ export default function Quiz() {
     stepKey === "ratings" ||
     stepKey === "category";
 
-  function next() {
+  async function next() {
     if (stepIndex < steps.length - 1) {
       setStepIndex(stepIndex + 1);
     } else {
-      const finalResults = recommend(answers, [], moviePool, sessionSeed);
-      setResultIndex(0);
-      setStage(finalResults.length > 0 ? "result" : "empty");
+      setStage("loading");
+      try {
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(answers),
+        });
+        const data = await res.json();
+        const fetchedResults = data.results || [];
+        setSearchResults(fetchedResults);
+        setResultIndex(0);
+        setStage(fetchedResults.length > 0 ? "result" : "empty");
+      } catch (error) {
+        console.error("Failed to fetch recommendations:", error);
+        setStage("error");
+      }
     }
   }
 
@@ -137,8 +115,8 @@ export default function Quiz() {
       <div className="pt-6 flex-1 overflow-hidden flex flex-col relative">
       {stage === "intro" && (
         <IntroScreen
-          movieCount={moviePool.length}
-          genreCount={genreCount}
+          movieCount={500}
+          genreCount={20}
           onStartQuiz={() => setStage("quiz")}
         />
       )}
@@ -163,8 +141,6 @@ export default function Quiz() {
       {stage === "result" && (overrideMovie || current) && (
         <MovieResult
           movie={overrideMovie || current!}
-          score={overrideMovie ? undefined : currentScore}
-          maxScore={overrideMovie ? undefined : currentMaxScore}
           resultIndex={overrideMovie ? undefined : resultIndex}
           totalMatches={overrideMovie ? undefined : totalMatches}
           onNext={overrideMovie ? () => setOverrideMovie(null) : nextRecommendation}
@@ -172,6 +148,13 @@ export default function Quiz() {
           onRestart={restart}
           onSelectSimilar={setOverrideMovie}
         />
+      )}
+
+      {stage === "loading" && (
+        <div className="text-center py-20">
+          <h2 className="font-display font-bold text-3xl mb-4 uppercase animate-pulse">Analyzing...</h2>
+          <p className="mb-8 font-mono text-sm">Matching your vibe to our database.</p>
+        </div>
       )}
 
       {stage === "empty" && (
