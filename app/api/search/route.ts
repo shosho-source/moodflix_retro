@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { CATEGORY_KEYWORD_MAP } from "@/lib/tmdb";
+import { CATEGORY_KEYWORD_MAP, fetchTMDBWithRetry } from "@/lib/tmdb";
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -83,7 +83,7 @@ interface Provider {
   [key: string]: unknown;
 }
 
-async function formatAndPrefetchMovie(m: DBRecord) {
+async function formatAndPrefetchMovie(m: DBRecord, isTV: boolean = false) {
   let trailerKey = null;
   let runtime = null;
   let providers: Provider[] = [];
@@ -91,24 +91,11 @@ async function formatAndPrefetchMovie(m: DBRecord) {
   let genres = m.genres || [];
   
   let data = null;
-  for (let i = 0; i < 3; i++) {
-    try {
-      const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/${m.id}?api_key=${TMDB_API_KEY}&append_to_response=watch/providers,videos`);
-      if (tmdbRes.ok) {
-        data = await tmdbRes.json();
-        break;
-      } else if (tmdbRes.status === 429) {
-        await new Promise(r => setTimeout(r, 600 * (i + 1))); // Backoff
-      } else {
-        break; // e.g., 404
-      }
-    } catch (err) {
-      if (i === 2) {
-         console.error(`Prefetch completely failed for movie ${m.id} after 3 retries:`, err);
-      } else {
-         await new Promise(r => setTimeout(r, 600 * (i + 1)));
-      }
-    }
+  try {
+    const endpoint = isTV ? 'tv' : 'movie';
+    data = await fetchTMDBWithRetry(`https://api.themoviedb.org/3/${endpoint}/${m.id}?api_key=${TMDB_API_KEY}&append_to_response=watch/providers,videos`);
+  } catch (err) {
+    console.error(`Prefetch completely failed for movie ${m.id} after 3 retries:`, err);
   }
   
   if (data) {
@@ -149,6 +136,7 @@ async function formatAndPrefetchMovie(m: DBRecord) {
     ...m,
     tmdbId: m.id,
     id: `tmdb-${m.id}`,
+    mediaType: isTV ? "tv" : "movie",
     year: m.release_year,
     voteAverage: m.vote_average,
     posterPath: m.poster_path 
@@ -173,9 +161,9 @@ export async function GET(request: NextRequest) {
   try {
     const results: DBRecord[] = [];
     
-    // Tier 1: Local Hybrid Search (AI + Fuzzy Text)
+    // Tier 1: Local Option B (Hybrid AI + Trigram)
     let queryVector: number[] | null = null;
-    const words = query.trim().split(/\\s+/).length;
+    const words = query.trim().split(/\s+/).length;
     
     // Protect Gemini quota: only vectorize conceptual queries (>= 3 words)
     if (words >= 3) {
@@ -195,48 +183,65 @@ export async function GET(request: NextRequest) {
     });
     
     if (error) {
-      console.error("Hybrid RPC failed (did you run the SQL script?):", error);
+      console.error("Hybrid RPC failed (Make sure you ran the 01_hybrid_search.sql script in Supabase!):", error);
     } else if (localMovies && localMovies.length > 0) {
       results.push(...localMovies);
     }
     
-    // Tier 2: TMDB Live Fallback (Provides industry-leading fuzzy typo-matching for missing movies)
-    if (results.length < 3) {
+    // Tier 2: TMDB Live Fallback (For uncatalogued/new movies)
+    // We trigger this if local DB has fewer than 10 matches, to ensure we 'top up' with global hits.
+    if (results.length < 10) {
       try {
         const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&include_adult=false`);
-        if (res.ok) {
-          const tmdbData = await res.json();
-          
-          const tmdbResults = (tmdbData.results || []).filter((m: { poster_path: string | null; overview: string; vote_count: number }) => m.poster_path && m.overview && m.vote_count > 5).slice(0, 5);
-          
-          for (const tmdbMovie of tmdbResults) {
-            if (!results.find(r => Number(r.id) === tmdbMovie.id)) {
-              results.push({
-                id: tmdbMovie.id,
-                title: tmdbMovie.title,
-                overview: tmdbMovie.overview,
-                poster_path: tmdbMovie.poster_path,
-                release_year: tmdbMovie.release_date ? parseInt(tmdbMovie.release_date.split('-')[0]) : null,
-                vote_average: tmdbMovie.vote_average,
-                genres: []
-              });
-              
-              // Auto-ingest new TMDB hits into local Supabase vector DB silently
-              enrichAndSaveFromTMDB(tmdbMovie); 
-            }
+        const tmdbData = res.ok ? await res.json() : null;
+        let tmdbResults = tmdbData ? (tmdbData.results || []).filter((m: { poster_path: string | null; overview: string; vote_count: number }) => m.poster_path && m.overview && m.vote_count > 5) : [];
+        
+        // Ultra-Smart AI Typo Recovery for TMDB
+        if (tmdbResults.length === 0) {
+           const chatModel = genAI.getGenerativeModel({ model: "gemini-pro" });
+           const prompt = `A user searched for a movie using the query: "${query}". They likely made a typo. What is the most likely real movie title they meant? Reply with ONLY the exact movie title, nothing else. If you are completely unsure, reply with "UNKNOWN".`;
+           const result = await chatModel.generateContent(prompt);
+           const correctedQuery = result.response.text().trim().replace(/['"]/g, '');
+           
+           if (correctedQuery && correctedQuery !== "UNKNOWN" && correctedQuery.toLowerCase() !== query.toLowerCase()) {
+               console.log(`AI corrected typo from "${query}" to "${correctedQuery}"`);
+               const retryRes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(correctedQuery)}&include_adult=false`);
+               if (retryRes.ok) {
+                  const retryData = await retryRes.json();
+                  tmdbResults = (retryData.results || []).filter((m: { poster_path: string | null; overview: string; vote_count: number }) => m.poster_path && m.overview && m.vote_count > 5);
+               }
+           }
+        }
+        
+        tmdbResults = tmdbResults.slice(0, 5);
+        
+        for (const tmdbMovie of tmdbResults) {
+          if (!results.find(r => Number(r.id) === tmdbMovie.id)) {
+            results.push({
+              id: tmdbMovie.id,
+              title: tmdbMovie.title,
+              overview: tmdbMovie.overview,
+              poster_path: tmdbMovie.poster_path,
+              release_year: tmdbMovie.release_date ? parseInt(tmdbMovie.release_date.split('-')[0]) : null,
+              vote_average: tmdbMovie.vote_average,
+              genres: []
+            });
+            
+            // Auto-ingest new TMDB hits into local Supabase vector DB silently
+            enrichAndSaveFromTMDB(tmdbMovie); 
           }
         }
       } catch (err) {
-        console.error("TMDB search fallback failed, ignoring:", err);
+        console.error("TMDB search fallback failed:", err);
       }
     }
 
     // Adapt to frontend movie interface expectations and prefetch details
-    const formattedResults = await Promise.all(results.map(formatAndPrefetchMovie));
+    const formattedResults = await Promise.all(results.map(m => formatAndPrefetchMovie(m)));
 
     return Response.json({ results: formattedResults });
   } catch (error) {
-    console.error("Hybrid text search failed:", error);
+    console.error("Search pipeline failed:", error);
     return Response.json({ results: [], error: "Search failed", details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
@@ -254,21 +259,10 @@ export async function POST(request: NextRequest) {
     interface DBRecord { id: number; title: string; overview: string; poster_path: string | null; vote_average: number; genres?: string[]; release_year?: number | null; [key: string]: unknown; }
     let filteredMovies: DBRecord[] = [];
     
-    if (body.category === "queer") {
-      let dbQuery = supabase.from('movies').select('*')
-        .or('overview.ilike.%gay%,overview.ilike.%lesbian%,overview.ilike.%queer%,overview.ilike.%lgbt%,overview.ilike.%transgender%,overview.ilike.%homosexual%');
-        
-      if (body.recency && body.recency !== "any") {
-        const cutoff = new Date().getFullYear() - parseInt(body.recency, 10);
-        dbQuery = dbQuery.gte('release_year', cutoff);
-      }
-      
-      const { data: queerData } = await dbQuery
-        .order('vote_average', { ascending: false })
-        .limit(50);
-        
-      filteredMovies = (queerData || []).sort(() => 0.5 - Math.random());
+    const isTV = body.mediaPreference === "tv";
 
+    if (isTV) {
+      filteredMovies = [];
     } else {
       try {
         // 1. Use Gemini to generate a vector for the prompt
@@ -279,7 +273,7 @@ export async function POST(request: NextRequest) {
       // 2. Call Supabase RPC match_movies with higher count for post-filtering
       const { data: matchedMovies, error } = await supabase.rpc('match_movies', {
         query_embedding: queryVector,
-        match_threshold: 0.0,
+        match_threshold: 0.55,
         match_count: 50
       });
 
@@ -288,9 +282,15 @@ export async function POST(request: NextRequest) {
     } catch (aiError) {
       console.warn("AI Vector search failed. Executing smart SQL fallback...", aiError);
       
-      // Fallback Strategy: Map mood/occasion to implicit genres
-      const targetGenres = new Set<string>();
-      if (body.genres) body.genres.forEach((g: string) => targetGenres.add(g));
+      // If user selected a specific Category, local SQL fallback cannot accurately filter it.
+      // We must skip SQL fallback so TMDB backfill perfectly handles the category.
+      if (body.category && body.category !== "none") {
+        console.warn("Category requested. Skipping local SQL fallback to guarantee TMDB category backfill.");
+        filteredMovies = [];
+      } else {
+        // Fallback Strategy: Map mood/occasion to implicit genres
+        const targetGenres = new Set<string>();
+        if (body.genres) body.genres.forEach((g: string) => targetGenres.add(g));
       
       if (body.mood === "happy") ["Comedy", "Family", "Animation", "Music", "Romance"].forEach(g => targetGenres.add(g));
       if (body.mood === "sad") ["Drama", "History", "War"].forEach(g => targetGenres.add(g));
@@ -324,7 +324,8 @@ export async function POST(request: NextRequest) {
       
       // Take top 30 best matches, then shuffle them for variety
       filteredMovies = pool.slice(0, 30).sort(() => 0.5 - Math.random());
-    }
+      }
+      }
     }
     
     // Strict Post-Filtering (applies to both Vector and Fallback results)
@@ -347,6 +348,23 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    // Strict Anime Filter
+    if (body.category === "anime") {
+      filteredMovies = filteredMovies.filter((m: DBRecord) => {
+        const ov = (m.overview || "").toLowerCase();
+        return ov.includes("anime") || ov.includes("japan") || ov.includes("manga") || ov.includes("tokyo");
+      });
+    } else {
+      // Prevent Anime from bleeding into other categories (unless Animation genre explicitly requested)
+      const requestedAnimation = body.genres && body.genres.some((g: string) => g.toLowerCase() === "animation");
+      if (!requestedAnimation) {
+        filteredMovies = filteredMovies.filter((m: DBRecord) => {
+          const ov = (m.overview || "").toLowerCase();
+          return !ov.includes("anime") && !ov.includes("manga");
+        });
+      }
+    }
+    
     // Generalized TMDB Backfill if local DB falls short
     if (filteredMovies.length < 15) {
       console.log(`Only found ${filteredMovies.length} movies locally. Backfilling from TMDB...`);
@@ -359,37 +377,47 @@ export async function POST(request: NextRequest) {
 
         if (body.recency && body.recency !== "any") {
           const cutoff = new Date().getFullYear() - parseInt(body.recency, 10);
-          params.set("primary_release_date.gte", `${cutoff}-01-01`);
+          if (isTV) {
+            params.set("first_air_date.gte", `${cutoff}-01-01`);
+          } else {
+            params.set("primary_release_date.gte", `${cutoff}-01-01`);
+          }
         }
 
-        if (body.category && body.category !== "none") {
+          if (body.category && body.category !== "none") {
           const kws = CATEGORY_KEYWORD_MAP[body.category as keyof typeof CATEGORY_KEYWORD_MAP];
           if (kws && kws.length > 0) {
             params.set("with_keywords", kws.join("|"));
           }
           if (body.category === "documentary") params.set("with_genres", "99");
           if (body.category === "top-250") params.set("vote_count.gte", "10000");
+          if (body.category === "anime") {
+            params.set("with_original_language", "ja");
+            params.set("with_genres", "16"); // Animation
+          } else {
+            const requestedAnimation = body.genres && body.genres.some((g: string) => g.toLowerCase() === "animation");
+            if (!requestedAnimation) {
+              params.set("without_keywords", "210024,287501"); // Exclude anime keywords
+            }
+          }
         }
 
-        const tmdbUrl = `https://api.themoviedb.org/3/discover/movie?${params.toString()}`;
-        const res = await fetch(tmdbUrl);
-        if (res.ok) {
-          const tmdbData = await res.json();
+        const tmdbUrl = `https://api.themoviedb.org/3/discover/${isTV ? 'tv' : 'movie'}?${params.toString()}`;
+        const tmdbData = await fetchTMDBWithRetry(tmdbUrl);
           for (const tm of (tmdbData.results || []).filter((tm: { poster_path: string | null }) => tm.poster_path)) {
             if (filteredMovies.length >= 15) break;
             if (!filteredMovies.find(m => m.id === tm.id)) {
               filteredMovies.push({
                 id: tm.id,
-                title: tm.title,
+                title: tm.title || tm.name,
                 overview: tm.overview,
                 poster_path: tm.poster_path,
                 vote_average: tm.vote_average,
-                release_year: tm.release_date ? parseInt(tm.release_date.split('-')[0]) : null,
+                release_year: tm.release_date ? parseInt(tm.release_date.split('-')[0]) : (tm.first_air_date ? parseInt(tm.first_air_date.split('-')[0]) : null),
               });
-              enrichAndSaveFromTMDB(tm);
+              if (!isTV) enrichAndSaveFromTMDB(tm);
             }
           }
-        }
       } catch (err) {
         console.error("TMDB generalized backfill failed:", err);
       }
@@ -398,86 +426,8 @@ export async function POST(request: NextRequest) {
     // Truncate to top 15 after strict filtering and potential backfill
     filteredMovies = filteredMovies.slice(0, 15);
 
-    // Adapt to frontend movie interface expectations and prefetch details
-    const formattedResults = await Promise.all(filteredMovies.map(async (m: DBRecord) => {
-      let trailerKey = null;
-      let runtime = null;
-      let providers = [];
-      
-      let genres = m.genres || [];
-      
-      let data = null;
-      for (let i = 0; i < 3; i++) {
-        try {
-          const tmdbRes = await fetch(`https://api.themoviedb.org/3/movie/${m.id}?api_key=${TMDB_API_KEY}&append_to_response=watch/providers,videos`);
-          if (tmdbRes.ok) {
-            data = await tmdbRes.json();
-            break;
-          } else if (tmdbRes.status === 429) {
-            await new Promise(r => setTimeout(r, 600 * (i + 1))); // Backoff
-          } else {
-            break; // e.g., 404
-          }
-        } catch (err) {
-          // Network errors like ECONNRESET
-          if (i === 2) {
-             console.error(`Prefetch completely failed for movie ${m.id} after 3 retries:`, err);
-          } else {
-             await new Promise(r => setTimeout(r, 600 * (i + 1)));
-          }
-        }
-      }
-      
-      if (data) {
-        const usData = data['watch/providers']?.results?.US || {};
-        const allUsProviders = [
-          ...(usData.flatrate || []),
-          ...(usData.free || []),
-          ...(usData.ads || []),
-          ...(usData.rent || []),
-          ...(usData.buy || [])
-        ];
-        const uniqueProviders = [];
-        const seen = new Set();
-        for (const p of allUsProviders) {
-          if (!seen.has(p.provider_id)) {
-            seen.add(p.provider_id);
-            uniqueProviders.push(p);
-          }
-        }
-        providers = uniqueProviders;
-        runtime = data.runtime || null;
-        
-        if (data.genres && data.genres.length > 0) {
-          genres = data.genres.map((g: { name: string }) => g.name);
-        }
-        
-        if (data.poster_path) {
-          m.poster_path = data.poster_path;
-        }
-        
-        const videos = data.videos?.results || [];
-        const trailer = videos.find((v: { type: string; site: string; key: string }) => v.type === "Trailer" && v.site === "YouTube") 
-                     || videos.find((v: { type: string; site: string; key: string }) => v.site === "YouTube");
-        trailerKey = trailer?.key || null;
-      }
-
-      return {
-        ...m,
-        tmdbId: m.id,
-        id: `tmdb-${m.id}`,
-        year: m.release_year,
-        voteAverage: m.vote_average,
-        posterPath: m.poster_path 
-          ? (m.poster_path.startsWith('http') ? m.poster_path : `https://image.tmdb.org/t/p/w500${m.poster_path}`) 
-          : null,
-        blurb: m.overview,
-        genres,
-        trailerKey,
-        runtime,
-        providers
-      };
-    }));
+    // Adapt to frontend movie interface expectations and prefetch details using the shared utility
+    const formattedResults = await Promise.all(filteredMovies.map(m => formatAndPrefetchMovie(m, isTV)));
 
     return Response.json({ results: formattedResults });
   } catch (error) {

@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as dotenv from 'dotenv';
 import path from 'path';
+import { fetchTMDBWithRetry } from '../lib/tmdb';
 
 // Load environment variables from .env.local
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
@@ -22,43 +23,18 @@ const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-async function fetchFromTMDB(endpoint: string, params: Record<string, string> = {}, retries = 3) {
-  const url = new URL(`https://api.themoviedb.org/3${endpoint}`);
-  url.searchParams.set("api_key", TMDB_API_KEY!);
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.set(key, value);
-  }
-  
-  for (let i = 0; i < retries; i++) {
-    try {
-      const res = await fetch(url.toString());
-      if (!res.ok) {
-        throw new Error(`TMDB API Error: ${res.statusText}`);
-      }
-      return await res.json();
-    } catch (err) {
-      if (i === retries - 1) {
-        console.error("fetch failed on URL:", url.toString());
-        const cause = err instanceof Error ? err.cause || err.message : String(err);
-        console.error("Cause:", cause);
-        throw err;
-      }
-      console.log(`Fetch failed (attempt ${i + 1}/${retries}). Retrying in ${i + 1}s...`);
-      await delay(1000 * (i + 1));
-    }
-  }
-}
+// Custom fetchFromTMDB removed in favor of shared fetchTMDBWithRetry
 
 async function runSync() {
   console.log("Starting daily movie ingestion sync...");
   let addedCount = 0;
-  const LIMIT = 1000;
+  const LIMIT = 500;
   let page = 1;
 
   while (addedCount < LIMIT && page <= 500) {
     console.log(`Fetching popular movies page ${page}...`);
     try {
-      const data = await fetchFromTMDB('/movie/popular', { page: page.toString(), language: 'en-US' });
+      const data = await fetchTMDBWithRetry(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&page=${page}&language=en-US`);
       const movies = data.results;
       
       if (!movies || movies.length === 0) break;
@@ -85,7 +61,7 @@ async function runSync() {
           }
 
           // Fetch detailed info (credits + details for genres)
-          const detail = await fetchFromTMDB(`/movie/${movie.id}`, { append_to_response: 'credits' });
+          const detail = await fetchTMDBWithRetry(`https://api.themoviedb.org/3/movie/${movie.id}?api_key=${TMDB_API_KEY}&append_to_response=credits`);
           
           const genres = detail.genres?.map((g: { name: string }) => g.name) || [];
           const director = detail.credits?.crew?.find((c: { job: string; name: string }) => c.job === 'Director')?.name || 'Unknown';

@@ -173,11 +173,28 @@ async function tmdbFetch<T>(path: string, params: Record<string, string> = {}): 
     url.searchParams.set(k, v);
   }
 
-  const res = await fetch(url.toString());
-  if (!res.ok) {
-    throw new Error(`TMDB API error: ${res.status} ${res.statusText}`);
+  return fetchTMDBWithRetry(url.toString()) as Promise<T>;
+}
+
+export async function fetchTMDBWithRetry(url: string, retries = 3): Promise<any> {
+  const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+  for (let i = 0; i < retries; i++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) {
+        if (res.status === 429) {
+          throw new Error("Rate limited"); // Will be caught and retried
+        }
+        throw new Error(`TMDB API error: ${res.status} ${res.statusText}`);
+      }
+      return await res.json();
+    } catch (err) {
+      if (i === retries - 1) {
+        throw err;
+      }
+      await delay(600 * (i + 1));
+    }
   }
-  return res.json() as Promise<T>;
 }
 
 // ─── Fetch discover pages ────────────────────────────────────────
