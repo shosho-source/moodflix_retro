@@ -205,6 +205,12 @@ export default function MovieResult({
               <span>CINEMATIC_OUTPUT</span>
             </div>
             <div className="flex items-center gap-3 sm:gap-4">
+              {movie.matchPercentage !== undefined && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 border-2 border-[var(--retro-border)] whitespace-nowrap bg-[var(--retro-fg)] text-[var(--retro-surface)] uppercase font-mono">
+                  <span>[✓]</span>
+                  {movie.matchPercentage}% MATCH
+                </span>
+              )}
               {hasMatchBadge && <MatchBadge score={score} max={maxScore} />}
               {hasNavigation && (
                 <span className="text-xs sm:text-sm whitespace-nowrap font-mono font-bold border-l-2 border-[var(--retro-border)] pl-4">
@@ -221,6 +227,13 @@ export default function MovieResult({
           </div>
           <div className="flex-1 flex flex-col items-center text-center sm:items-start sm:text-left w-full mt-2 sm:mt-0">
             <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-4">
+              {movie.source && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-xs font-mono font-bold px-2 py-1 border border-[var(--retro-border)] uppercase bg-black/20"
+                >
+                  [{movie.source === 'database' ? 'LOCAL DB' : 'TMDB API'}]
+                </span>
+              )}
               {movie.genres?.map((g) => (
                 <span
                   key={g}
@@ -229,11 +242,13 @@ export default function MovieResult({
                   {g}
                 </span>
               ))}
-              <span
-                className="inline-flex items-center gap-1.5 text-xs font-mono font-bold px-2 py-1 border border-[var(--retro-border)] uppercase bg-[var(--retro-fg)] text-[var(--retro-surface)]"
-              >
-                {movie.rating}
-              </span>
+              {movie.rating && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-xs font-mono font-bold px-2 py-1 border border-[var(--retro-border)] uppercase bg-[var(--retro-fg)] text-[var(--retro-surface)]"
+                >
+                  {movie.rating}
+                </span>
+              )}
               {movie.categories?.includes("queer") && (
                 <span
                   className="inline-flex items-center gap-1.5 text-xs font-mono font-bold px-2 py-1 border border-[var(--retro-border)] uppercase"

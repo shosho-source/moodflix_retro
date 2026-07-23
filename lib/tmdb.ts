@@ -70,7 +70,7 @@ const GENRE_TO_OCCASIONS: Record<number, Occasion[]> = {
 // These are TMDB keyword IDs used in discover calls for category tagging
 export const CATEGORY_KEYWORD_MAP: Record<Category, number[]> = {
   "true-story": [9672],             // based on true story
-  "perspective-shift": [],           // inferred from high-rating dramas
+  "perspective-shift": [174542],     // thought-provoking
   "nyc": [5765, 10178],             // new york city, new york
   "spy-cop": [470, 6149, 9715],     // spy, police, detective
   "space": [14909, 1826, 2535],     // outer space, space, astronaut
@@ -78,7 +78,7 @@ export const CATEGORY_KEYWORD_MAP: Record<Category, number[]> = {
   "heist": [10291, 168142],         // heist, bank robbery
   "book": [818],                    // based on novel
   "racing": [6270, 4391],           // car chase, car racing
-  "girl-power": [],                 // inferred from genre patterns
+  "girl-power": [4289, 157078],     // female protagonist, feminism
   "vegas": [1224],                  // las vegas
   "top-250": [],                    // inferred from vote_average
   "sad-ending": [12133, 10738],     // tragedy, tearjerker

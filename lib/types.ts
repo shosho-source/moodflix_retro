@@ -49,6 +49,8 @@ export interface Movie {
   }>;
   voteAverage?: number; // TMDB vote average (0–10)
   mediaType?: "movie" | "tv";
+  matchPercentage?: number; // Vector search similarity (0-100)
+  source?: "database" | "tmdb"; // Origin of the movie result
 }
 
 export interface QuizAnswers {

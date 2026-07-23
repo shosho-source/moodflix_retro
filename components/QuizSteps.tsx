@@ -208,7 +208,6 @@ export default function QuizSteps({
           {stepKey === "category" && (
             <Step
               title="Any other category you're after?"
-              hint="If nothing matches, this question is quietly ignored."
             >
               {categoryOptions.map((o) => (
                 <OptionCard

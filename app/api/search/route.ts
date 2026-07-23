@@ -73,6 +73,8 @@ interface DBRecord {
   vote_average: number;
   release_year?: number | null;
   genres?: string[];
+  similarity?: number;
+  source?: "database" | "tmdb";
   [key: string]: unknown;
 }
 
@@ -90,10 +92,15 @@ async function formatAndPrefetchMovie(m: DBRecord, isTV: boolean = false) {
   
   let genres = m.genres || [];
   
+  let rating = null;
+  
   let data = null;
   try {
     const endpoint = isTV ? 'tv' : 'movie';
-    data = await fetchTMDBWithRetry(`https://api.themoviedb.org/3/${endpoint}/${m.id}?api_key=${TMDB_API_KEY}&append_to_response=watch/providers,videos`);
+    const append = isTV 
+      ? 'watch/providers,videos,content_ratings' 
+      : 'watch/providers,videos,release_dates';
+    data = await fetchTMDBWithRetry(`https://api.themoviedb.org/3/${endpoint}/${m.id}?api_key=${TMDB_API_KEY}&append_to_response=${append}`);
   } catch (err) {
     console.error(`Prefetch completely failed for movie ${m.id} after 3 retries:`, err);
   }
@@ -130,6 +137,16 @@ async function formatAndPrefetchMovie(m: DBRecord, isTV: boolean = false) {
     const trailer = videos.find((v: { type: string; site: string; key: string }) => v.type === 'Trailer' && v.site === 'YouTube') 
                  || videos.find((v: { type: string; site: string; key: string }) => v.site === 'YouTube');
     trailerKey = trailer?.key || null;
+    
+    if (isTV) {
+      const usRating = data.content_ratings?.results?.find((r: { iso_3166_1: string, rating: string }) => r.iso_3166_1 === 'US');
+      rating = usRating ? usRating.rating : null;
+    } else {
+      const usRelease = data.release_dates?.results?.find((r: { iso_3166_1: string, release_dates: { certification: string }[] }) => r.iso_3166_1 === 'US');
+      if (usRelease && usRelease.release_dates && usRelease.release_dates.length > 0) {
+        rating = usRelease.release_dates.find((rd: { certification: string }) => rd.certification)?.certification || usRelease.release_dates[0].certification || null;
+      }
+    }
   }
 
   return {
@@ -146,7 +163,10 @@ async function formatAndPrefetchMovie(m: DBRecord, isTV: boolean = false) {
     genres,
     trailerKey,
     runtime,
-    providers
+    providers,
+    rating,
+    matchPercentage: m.similarity !== undefined && m.similarity !== null ? Math.round(m.similarity * 100) : undefined,
+    source: m.source || "database"
   };
 }
 
@@ -185,7 +205,22 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error("Hybrid RPC failed (Make sure you ran the 01_hybrid_search.sql script in Supabase!):", error);
     } else if (localMovies && localMovies.length > 0) {
-      results.push(...localMovies);
+      // If we didn't vectorize (short query), the SQL RPC falls back to trigram similarity > 0.15. 
+      // This is WAY too low for 1-2 word queries and returns garbage matches (e.g. "John Wick" for "WILD").
+      // We must strictly filter these local results in memory.
+      const q = query.toLowerCase();
+      const filteredLocal = queryVector === null 
+        ? localMovies.filter((m: DBRecord) => {
+            const t = (m.title || "").toLowerCase();
+            const d = (typeof m.director === 'string' ? m.director : "").toLowerCase();
+            // We do NOT use similarity_score here because the SQL RPC bloats it with vote_count.
+            // Strict substring match ensures we don't get 'Iron Man' for 'MANIPULATE'.
+            // If they made a typo, they will fail this and hit TMDB's superior search API fallback!
+            return t.includes(q) || d.includes(q);
+          })
+        : localMovies;
+        
+      results.push(...filteredLocal);
     }
     
     // Tier 2: TMDB Live Fallback (For uncatalogued/new movies)
@@ -198,18 +233,22 @@ export async function GET(request: NextRequest) {
         
         // Ultra-Smart AI Typo Recovery for TMDB
         if (tmdbResults.length === 0) {
-           const chatModel = genAI.getGenerativeModel({ model: "gemini-pro" });
-           const prompt = `A user searched for a movie using the query: "${query}". They likely made a typo. What is the most likely real movie title they meant? Reply with ONLY the exact movie title, nothing else. If you are completely unsure, reply with "UNKNOWN".`;
-           const result = await chatModel.generateContent(prompt);
-           const correctedQuery = result.response.text().trim().replace(/['"]/g, '');
-           
-           if (correctedQuery && correctedQuery !== "UNKNOWN" && correctedQuery.toLowerCase() !== query.toLowerCase()) {
-               console.log(`AI corrected typo from "${query}" to "${correctedQuery}"`);
-               const retryRes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(correctedQuery)}&include_adult=false`);
-               if (retryRes.ok) {
-                  const retryData = await retryRes.json();
-                  tmdbResults = (retryData.results || []).filter((m: { poster_path: string | null; overview: string; vote_count: number }) => m.poster_path && m.overview && m.vote_count > 5);
-               }
+           try {
+             const chatModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+             const prompt = `A user searched for a movie using the query: "${query}". They might have made a typo. If it's a very clear typo of a well-known movie, reply with ONLY the exact movie title. If it is NOT a clear typo, or you are unsure, or it's just a random word, reply with "UNKNOWN".`;
+             const result = await chatModel.generateContent(prompt);
+             const correctedQuery = result.response.text().trim().replace(/['"]/g, '');
+             
+             if (correctedQuery && correctedQuery !== "UNKNOWN" && correctedQuery.toLowerCase() !== query.toLowerCase()) {
+                 console.log(`AI corrected typo from "${query}" to "${correctedQuery}"`);
+                 const retryRes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(correctedQuery)}&include_adult=false`);
+                 if (retryRes.ok) {
+                    const retryData = await retryRes.json();
+                    tmdbResults = (retryData.results || []).filter((m: { poster_path: string | null; overview: string; vote_count: number }) => m.poster_path && m.overview && m.vote_count > 5);
+                 }
+             }
+           } catch (aiErr) {
+             console.error("AI Typo Recovery failed:", aiErr);
            }
         }
         
@@ -224,7 +263,8 @@ export async function GET(request: NextRequest) {
               poster_path: tmdbMovie.poster_path,
               release_year: tmdbMovie.release_date ? parseInt(tmdbMovie.release_date.split('-')[0]) : null,
               vote_average: tmdbMovie.vote_average,
-              genres: []
+              genres: [],
+              source: "tmdb"
             });
             
             // Auto-ingest new TMDB hits into local Supabase vector DB silently
@@ -256,7 +296,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ results: [] });
     }
 
-    interface DBRecord { id: number; title: string; overview: string; poster_path: string | null; vote_average: number; genres?: string[]; release_year?: number | null; [key: string]: unknown; }
+    interface DBRecord { id: number; title: string; overview: string; poster_path: string | null; vote_average: number; genres?: string[]; release_year?: number | null; similarity?: number; source?: "database" | "tmdb"; [key: string]: unknown; }
     let filteredMovies: DBRecord[] = [];
     
     const isTV = body.mediaPreference === "tv";
@@ -365,6 +405,38 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    // Strict Category Text Filter for local vector matches
+    if (body.category && body.category !== "none") {
+      if (body.category === "top-250") {
+        filteredMovies = filteredMovies.filter((m: DBRecord) => m.vote_average >= 8.0);
+      } else if (body.category === "documentary") {
+        filteredMovies = filteredMovies.filter((m: DBRecord) => m.genres && m.genres.some((g: string) => g.toLowerCase() === "documentary"));
+      } else if (body.category !== "anime" && body.category !== "tv-series") {
+        const catMatches: Record<string, string[]> = {
+          "true-story": ["true story", "based on", "biography", "real life", "true events"],
+          "perspective-shift": ["thought-provoking", "perspective", "life-changing", "profound"],
+          "nyc": ["new york", "nyc", "manhattan", "brooklyn"],
+          "spy-cop": ["spy", "police", "detective", "cia", "fbi", "agent", "cop", "undercover"],
+          "space": ["space", "astronaut", "alien", "planet", "galaxy", "sci-fi"],
+          "wedding": ["wedding", "marriage", "bride", "groom"],
+          "heist": ["heist", "robbery", "thief", "steal", "bank"],
+          "book": ["based on", "novel", "book", "author"],
+          "racing": ["racing", "car", "race", "driver"],
+          "girl-power": ["female", "woman", "feminist", "girl", "heroine"],
+          "vegas": ["vegas", "casino", "gambling"],
+          "sad-ending": ["tragedy", "tragic", "heartbreak", "sad"]
+        };
+        
+        const kws = catMatches[body.category] || [];
+        if (kws.length > 0) {
+          filteredMovies = filteredMovies.filter((m: DBRecord) => {
+            const text = ((m.title || "") + " " + (m.overview || "")).toLowerCase();
+            return kws.some(kw => text.includes(kw));
+          });
+        }
+      }
+    }
+    
     // Generalized TMDB Backfill if local DB falls short
     if (filteredMovies.length < 15) {
       console.log(`Only found ${filteredMovies.length} movies locally. Backfilling from TMDB...`);
@@ -401,6 +473,20 @@ export async function POST(request: NextRequest) {
             }
           }
         }
+        
+        // Also strictly enforce requested genres in the TMDB fallback if they exist
+        if (body.genres && body.genres.length > 0 && body.category !== "anime" && body.category !== "documentary") {
+          const REVERSE_GENRE_MAP: Record<string, string> = {
+            "action": "28", "adventure": "12", "animation": "16", "comedy": "35", "crime": "80",
+            "documentary": "99", "drama": "18", "family": "10751", "fantasy": "14", "history": "36",
+            "horror": "27", "music": "10402", "mystery": "9648", "romance": "10749", "science fiction": "878",
+            "thriller": "53", "war": "10752", "western": "37"
+          };
+          const tmdbGenreIds = body.genres.map((g: string) => REVERSE_GENRE_MAP[g.toLowerCase()]).filter(Boolean);
+          if (tmdbGenreIds.length > 0) {
+            params.set("with_genres", tmdbGenreIds.join(","));
+          }
+        }
 
         const tmdbUrl = `https://api.themoviedb.org/3/discover/${isTV ? 'tv' : 'movie'}?${params.toString()}`;
         const tmdbData = await fetchTMDBWithRetry(tmdbUrl);
@@ -414,6 +500,7 @@ export async function POST(request: NextRequest) {
                 poster_path: tm.poster_path,
                 vote_average: tm.vote_average,
                 release_year: tm.release_date ? parseInt(tm.release_date.split('-')[0]) : (tm.first_air_date ? parseInt(tm.first_air_date.split('-')[0]) : null),
+                source: "tmdb"
               });
               if (!isTV) enrichAndSaveFromTMDB(tm);
             }

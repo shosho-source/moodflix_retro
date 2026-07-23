@@ -165,9 +165,11 @@ export default function SearchScreen() {
                                 {movie.voteAverage.toFixed(1)}
                               </span>
                             )}
-                            <span className="text-xs" >
-                              {movie.runtime} min
-                            </span>
+                            {movie.runtime ? (
+                              <span className="text-xs" >
+                                {movie.runtime} min
+                              </span>
+                            ) : null}
                           </div>
                         </div>
                         <span className="material-symbols-outlined text-[20px] shrink-0" >
