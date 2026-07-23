@@ -9,7 +9,8 @@
   --retro-accent-fg: #ffffff;
 }
 
-html, body {
+html,
+body {
   height: 100dvh;
   overflow: hidden;
   margin: 0;
@@ -23,14 +24,17 @@ html, body {
     width: 12px;
     height: 12px;
   }
+
   *::-webkit-scrollbar-track {
     background: var(--retro-surface);
     border: 1px solid var(--retro-border);
   }
+
   *::-webkit-scrollbar-thumb {
     background: var(--retro-accent);
     border: 1px solid var(--retro-border);
   }
+
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--retro-accent) var(--retro-surface);
@@ -50,19 +54,6 @@ body {
 
 
 
-/* Subtle text glitch for loading states */
-@keyframes textGlitch {
-  0% { transform: translate(0) }
-  20% { transform: translate(-2px, 1px) }
-  40% { transform: translate(-1px, -1px) }
-  60% { transform: translate(2px, 1px) }
-  80% { transform: translate(1px, -1px) }
-  100% { transform: translate(0) }
-}
-
-.glitch-anim {
-  animation: textGlitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
-}
 
 .font-display {
   font-family: var(--font-space-mono), "Courier New", monospace;
@@ -128,17 +119,21 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
 }
 
-/* Sprocket / filmstrip progress indicator - Brutalist Version */
+/* Sprocket / filmstrip progress indicator */
 .sprocket-track {
   display: flex;
   gap: 4px;
 }
+
 .sprocket-hole {
   flex: 1;
   height: 8px;
@@ -146,7 +141,8 @@ body {
   border: 1px solid var(--retro-border);
   overflow: hidden;
 }
-.sprocket-hole > span {
+
+.sprocket-hole>span {
   display: block;
   height: 100%;
   width: 0%;
@@ -240,8 +236,10 @@ body {
   padding-bottom: 8px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Hide scrollbar */
+  scrollbar-width: none;
+  /* Hide scrollbar */
 }
+
 .similar-carousel::-webkit-scrollbar {
   display: none;
 }
